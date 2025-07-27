@@ -1,6 +1,6 @@
 # MUDTapper
 
-A modern Swift MUD client for iOS - a Multi-User Dungeon (MUD) client for iOS.
+A modern iOS MUD (Multi-User Dungeon text game) client built in Swift.
 
 ## Overview
 
