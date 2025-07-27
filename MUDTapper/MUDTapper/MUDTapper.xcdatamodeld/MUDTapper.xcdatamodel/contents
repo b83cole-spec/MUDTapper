@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22G120" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Alias" representedClassName="Alias" syncable="YES">
+        <attribute name="commands" optional="YES" attributeType="String"/>
+        <attribute name="isEnabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <relationship name="world" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="World" inverseName="aliases" inverseEntity="World"/>
+    </entity>
+    <entity name="Gag" representedClassName="Gag" syncable="YES">
+        <attribute name="gag" optional="YES" attributeType="String"/>
+        <attribute name="gagType" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="isEnabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="world" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="World" inverseName="gags" inverseEntity="World"/>
+    </entity>
+    <entity name="Ticker" representedClassName="Ticker" syncable="YES">
+        <attribute name="commands" optional="YES" attributeType="String"/>
+        <attribute name="interval" attributeType="Double" defaultValueString="60" usesScalarValueType="YES"/>
+        <attribute name="isEnabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="soundFileName" optional="YES" attributeType="String"/>
+        <relationship name="world" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="World" inverseName="tickers" inverseEntity="World"/>
+    </entity>
+    <entity name="Trigger" representedClassName="Trigger" syncable="YES">
+        <attribute name="commands" optional="YES" attributeType="String"/>
+        <attribute name="group" optional="YES" attributeType="String"/>
+        <attribute name="highlightColor" optional="YES" attributeType="String"/>
+        <attribute name="isEnabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="label" optional="YES" attributeType="String"/>
+        <attribute name="lastModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="matchCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="options" optional="YES" attributeType="String"/>
+        <attribute name="priority" attributeType="Integer 32" defaultValueString="50" usesScalarValueType="YES"/>
+        <attribute name="script" optional="YES" attributeType="String"/>
+        <attribute name="sequence" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="soundFileName" optional="YES" attributeType="String"/>
+        <attribute name="trigger" optional="YES" attributeType="String"/>
+        <attribute name="triggerType" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="variables" optional="YES" attributeType="String"/>
+        <attribute name="vibrate" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <relationship name="world" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="World" inverseName="triggers" inverseEntity="World"/>
+    </entity>
+    <entity name="World" representedClassName="World" syncable="YES">
+        <attribute name="autoConnect" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="connectCommand" optional="YES" attributeType="String"/>
+        <attribute name="hostname" optional="YES" attributeType="String"/>
+        <attribute name="isDefault" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isFavorite" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isSecure" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastConnected" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="password" optional="YES" attributeType="String"/>
+        <attribute name="port" attributeType="Integer 32" defaultValueString="23" usesScalarValueType="YES"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="username" optional="YES" attributeType="String"/>
+        <relationship name="aliases" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Alias" inverseName="world" inverseEntity="Alias"/>
+        <relationship name="gags" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Gag" inverseName="world" inverseEntity="Gag"/>
+        <relationship name="tickers" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Ticker" inverseName="world" inverseEntity="Ticker"/>
+        <relationship name="triggers" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Trigger" inverseName="world" inverseEntity="Trigger"/>
+    </entity>
+</model> 

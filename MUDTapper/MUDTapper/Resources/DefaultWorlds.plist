@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>name</key>
+		<string>Aardwolf MUD</string>
+		<key>hostname</key>
+		<string>aardmud.org</string>
+		<key>port</key>
+		<integer>4000</integer>
+		<key>isSecure</key>
+		<false/>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Achaea</string>
+		<key>hostname</key>
+		<string>achaea.com</string>
+		<key>port</key>
+		<integer>23</integer>
+		<key>isSecure</key>
+		<false/>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Discworld MUD</string>
+		<key>hostname</key>
+		<string>discworld.starturtle.net</string>
+		<key>port</key>
+		<integer>23</integer>
+		<key>isSecure</key>
+		<false/>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Threshold RPG</string>
+		<key>hostname</key>
+		<string>threshold.org</string>
+		<key>port</key>
+		<integer>23</integer>
+		<key>isSecure</key>
+		<false/>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>BatMUD</string>
+		<key>hostname</key>
+		<string>batmud.bat.org</string>
+		<key>port</key>
+		<integer>23</integer>
+		<key>isSecure</key>
+		<false/>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>3Kingdoms</string>
+		<key>hostname</key>
+		<string>3k.org</string>
+		<key>port</key>
+		<integer>3000</integer>
+		<key>isSecure</key>
+		<false/>
+	</dict>
+</array>
+</plist> 
