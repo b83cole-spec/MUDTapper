@@ -385,21 +385,11 @@ public class World: NSManagedObject, LoggableWorld {
         var shouldOmitLine = false
         var shouldOmitFromLog = false
         
-        // Debug: Log the line being processed
-        print("🔍 Processing line: '\(line)'")
-        
         for trigger in triggers {
-            // Debug: Log each trigger being checked
-            print("  📋 Checking trigger: '\(trigger.trigger ?? "")' (type: \(trigger.triggerTypeEnum.displayName))")
-            
             // Check if trigger matches first
             if trigger.matches(line: line) {
-                print("  ✅ TRIGGER MATCHED!")
-                print("  📋 Trigger commands: '\(trigger.commands ?? "")'")
-                
                 // Execute the trigger and get whether to continue
                 let shouldContinue = trigger.execute(for: line)
-                print("  🔄 Should continue evaluating: \(shouldContinue)")
                 
                 // Check if this trigger should omit the line from output
                 if trigger.shouldOmitFromOutput {

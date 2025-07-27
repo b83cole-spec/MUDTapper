@@ -1081,15 +1081,7 @@ class MUDSocket: NSObject {
                 self?.consecutiveKeepAliveFailures = 0 // Reset failure counter on successful data
                 
                 // Try multiple encodings commonly used by MUD servers
-                let decodedString = self?.decodeDataToString(data)
-                if let string = decodedString {
-                    print("MUDSocket: Data content: \(string.debugDescription)")
-                } else {
-                    print("MUDSocket: Could not decode data as string with any encoding")
-                    // Print raw bytes for debugging
-                    let hexString = data.map { String(format: "%02x", $0) }.joined(separator: " ")
-                    print("MUDSocket: Raw bytes: \(hexString)")
-                }
+                _ = self?.decodeDataToString(data)
                 
                 let filtered = self?.handleTelnetNegotiation(data) ?? data
                 DispatchQueue.main.async {
@@ -1133,7 +1125,6 @@ class MUDSocket: NSObject {
         
         for encoding in encodings {
             if let string = String(data: data, encoding: encoding) {
-                print("MUDSocket: Successfully decoded using \(encoding)")
                 return string
             }
         }
@@ -1163,18 +1154,10 @@ class MUDSocket: NSObject {
         
         // Test the connection by sending a minimal keep-alive
         // If this fails, the connection has likely been reclaimed
-        print("MUDSocket: Testing connection health with keep-alive")
-        
         let testData = "\n".data(using: .utf8)!
         connection.send(content: testData, completion: .contentProcessed { error in
             DispatchQueue.main.async {
-                if let error = error {
-                    print("MUDSocket: Connection health test failed: \(error)")
-                    completion(false)
-                } else {
-                    print("MUDSocket: Connection health test passed")
-                    completion(true)
-                }
+                completion(error == nil)
             }
         })
     }

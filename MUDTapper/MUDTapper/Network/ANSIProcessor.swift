@@ -15,10 +15,6 @@ class ANSIProcessor {
         )
     }
     
-    // MARK: - Debug Configuration
-    
-    private let debugMode = true // Set to true to enable debug logging
-    
     // MARK: - Text Attributes
     
     private struct TextAttributes {
@@ -136,10 +132,6 @@ class ANSIProcessor {
         // Combine and sort all matches
         let allMatches = (ansiMatches + escapeMatches).sorted { $0.range.location < $1.range.location }
         
-        if debugMode {
-            print("ANSIProcessor: Found \(allMatches.count) escape sequences")
-        }
-        
         var lastLocation = 0
         
         for match in allMatches {
@@ -155,9 +147,6 @@ class ANSIProcessor {
             let escapeCode = nsText.substring(with: match.range)
             if escapeCode.contains("[") {
                 // This is an ANSI sequence
-                if debugMode {
-                    print("ANSIProcessor: Processing ANSI code: \(escapeCode.debugDescription)")
-                }
                 processANSICode(escapeCode)
             }
             // Other escape sequences are just filtered out
@@ -171,11 +160,6 @@ class ANSIProcessor {
             let substring = nsText.substring(with: remainingRange)
             let attributes = currentAttributes.toAttributes(font: themeManager.terminalFont)
             mutableString.append(NSAttributedString(string: substring, attributes: attributes))
-        }
-        
-        if debugMode {
-            print("ANSIProcessor: Final processed text length: \(mutableString.length)")
-            print("ANSIProcessor: Final text: \(mutableString.string.debugDescription)")
         }
         
         return mutableString
@@ -205,10 +189,6 @@ class ANSIProcessor {
     // MARK: - Private Methods
     
     private func processANSICode(_ code: String) {
-        if debugMode {
-            print("ANSIProcessor: Raw ANSI code: \(code.debugDescription)")
-        }
-        
         // Remove escape sequence prefix and suffix
         var cleanCode = code.replacingOccurrences(of: "\u{1B}[", with: "")
         
@@ -240,16 +220,8 @@ class ANSIProcessor {
             return
         }
         
-        if debugMode {
-            print("ANSIProcessor: Clean code: \(cleanCode)")
-        }
-        
         // Split multiple codes separated by semicolons
         let codes = cleanCode.components(separatedBy: ";").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-        
-        if debugMode {
-            print("ANSIProcessor: Parsed codes: \(codes)")
-        }
         
         // Process codes, handling extended color sequences
         var i = 0
@@ -261,17 +233,6 @@ class ANSIProcessor {
                 // 256-color mode: ESC[38;5;n or ESC[48;5;n
                 let colorIndex = codes[i + 2]
                 let color = getXterm256Color(index: colorIndex)
-                
-                if debugMode {
-                    print("ANSIProcessor: 256-color \(codeValue == 38 ? "foreground" : "background") index \(colorIndex)")
-                    var red: CGFloat = 0
-                    var green: CGFloat = 0
-                    var blue: CGFloat = 0
-                    var alpha: CGFloat = 0
-                    color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-                    print("ANSIProcessor: 256-color RGB(\(red), \(green), \(blue))")
-                    print("ANSIProcessor: *** 256-COLOR CODE DETECTED! ***")
-                }
                 
                 if codeValue == 38 {
                     currentAttributes.foregroundColor = color
@@ -287,10 +248,6 @@ class ANSIProcessor {
                 let b = CGFloat(codes[i + 4]) / 255.0
                 let color = UIColor(red: r, green: g, blue: b, alpha: 1.0)
                 
-                if debugMode {
-                    print("ANSIProcessor: RGB color \(codeValue == 38 ? "foreground" : "background") r:\(codes[i + 2]) g:\(codes[i + 3]) b:\(codes[i + 4])")
-                }
-                
                 if codeValue == 38 {
                     currentAttributes.foregroundColor = color
                 } else {
@@ -300,9 +257,6 @@ class ANSIProcessor {
                 i += 5 // Skip the next four codes
             } else {
                 // Standard ANSI code
-                if debugMode {
-                    print("ANSIProcessor: Standard ANSI code: \(codeValue)")
-                }
                 processANSICodeValue(codeValue)
                 i += 1
             }
@@ -334,31 +288,19 @@ class ANSIProcessor {
             currentAttributes.isStrikethrough = false
         case 30...37:
             let colorIndex = code - 30
-            if debugMode {
-                print("ANSIProcessor: Standard foreground color code \(code) -> color index \(colorIndex)")
-            }
             currentAttributes.foregroundColor = getXterm256Color(index: colorIndex)
         case 36...43:
             // Extended bright foreground colors (some MUDs use 36-43 instead of 90-97)
             // Map 36-43 to bright colors: 36=bright black, 37=bright red, 38=bright green, etc.
             let brightColorIndex = code - 36 + 8 // Map to bright colors (8-15)
-            if debugMode {
-                print("ANSIProcessor: Extended bright foreground code \(code) -> color index \(brightColorIndex)")
-            }
             currentAttributes.foregroundColor = getXterm256Color(index: brightColorIndex)
         case 40...47:
             let colorIndex = code - 40
-            if debugMode {
-                print("ANSIProcessor: Standard background color code \(code) -> color index \(colorIndex)")
-            }
             currentAttributes.backgroundColor = getXterm256Color(index: colorIndex)
         case 46...53:
             // Extended bright background colors (some MUDs use 46-53 instead of 100-107)
             // Map 46-53 to bright background colors
             let brightColorIndex = code - 46 + 8 // Map to bright colors (8-15)
-            if debugMode {
-                print("ANSIProcessor: Extended bright background code \(code) -> color index \(brightColorIndex)")
-            }
             currentAttributes.backgroundColor = getXterm256Color(index: brightColorIndex)
         case 90...97:
             currentAttributes.foregroundColor = getXterm256Color(index: code - 90 + 8)
@@ -369,9 +311,6 @@ class ANSIProcessor {
         case 49:
             currentAttributes.backgroundColor = themeManager.terminalBackgroundColor
         default:
-            if debugMode {
-                print("ANSIProcessor: Unknown ANSI code: \(code)")
-            }
             break
         }
     }
@@ -402,21 +341,9 @@ class ANSIProcessor {
     
     private func getTraditionalANSIColor(index: Int) -> UIColor {
         guard index >= 0 && index < 16 else {
-            if debugMode {
-                print("ANSIProcessor: Invalid traditional ANSI color index: \(index)")
-            }
             return themeManager.terminalTextColor
         }
-        let color = ANSIProcessor.traditionalANSIColors[index]
-        if debugMode {
-            var red: CGFloat = 0
-            var green: CGFloat = 0
-            var blue: CGFloat = 0
-            var alpha: CGFloat = 0
-            color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-            print("ANSIProcessor: Traditional color index \(index) -> RGB(\(red), \(green), \(blue))")
-        }
-        return color
+        return ANSIProcessor.traditionalANSIColors[index]
     }
 
     // MARK: - XTERM 256-Color Support
@@ -467,75 +394,9 @@ class ANSIProcessor {
     
     private func getXterm256Color(index: Int) -> UIColor {
         guard index >= 0 && index < 256 else {
-            if debugMode {
-                print("ANSIProcessor: Invalid 256-color index: \(index)")
-            }
             return themeManager.terminalTextColor
         }
         return ANSIProcessor.xterm256Colors[index]
-    }
-    
-    // MARK: - Debug Methods
-    
-    func testXterm256Colors() -> String {
-        var result = "XTERM 256-Color Test:\n\n"
-        
-        // Test system colors (0-15) with actual ANSI codes
-        result += "System Colors (0-15):\n"
-        for i in 0..<16 {
-            result += "\u{1B}[38;5;\(i)mColor \(i)\u{1B}[0m "
-            if (i + 1) % 8 == 0 { result += "\n" }
-        }
-        result += "\n\n"
-        
-        // Test color cube (16-231) with actual ANSI codes
-        result += "Color Cube (16-231):\n"
-        for row in 0..<6 {
-            result += "Row \(row): "
-            for col in 0..<6 {
-                let colorIndex = 16 + (row * 36) + (col * 6)
-                result += "\u{1B}[38;5;\(colorIndex)m\(colorIndex)\u{1B}[0m "
-            }
-            result += "\n"
-        }
-        result += "\n"
-        
-        // Test grayscale (232-255) with actual ANSI codes
-        result += "Grayscale (232-255):\n"
-        for i in 232..<256 {
-            result += "\u{1B}[38;5;\(i)mGray \(i)\u{1B}[0m "
-            if (i - 232 + 1) % 8 == 0 { result += "\n" }
-        }
-        result += "\n\n"
-        
-        // Test some specific bright colors
-        result += "Bright Colors Test:\n"
-        result += "\u{1B}[38;5;196mBright Red (196)\u{1B}[0m "
-        result += "\u{1B}[38;5;46mBright Green (46)\u{1B}[0m "
-        result += "\u{1B}[38;5;21mBright Blue (21)\u{1B}[0m "
-        result += "\u{1B}[38;5;226mBright Yellow (226)\u{1B}[0m "
-        result += "\u{1B}[38;5;201mBright Magenta (201)\u{1B}[0m "
-        result += "\u{1B}[38;5;51mBright Cyan (51)\u{1B}[0m\n\n"
-        
-        // Test background colors
-        result += "Background Colors Test:\n"
-        result += "\u{1B}[48;5;196mRed BG\u{1B}[0m "
-        result += "\u{1B}[48;5;46mGreen BG\u{1B}[0m "
-        result += "\u{1B}[48;5;21mBlue BG\u{1B}[0m "
-        result += "\u{1B}[48;5;226mYellow BG\u{1B}[0m "
-        result += "\u{1B}[48;5;201mMagenta BG\u{1B}[0m "
-        result += "\u{1B}[48;5;51mCyan BG\u{1B}[0m\n\n"
-        
-        // Test combined foreground/background
-        result += "Combined Foreground/Background:\n"
-        result += "\u{1B}[38;5;196;48;5;16mRed on Black\u{1B}[0m "
-        result += "\u{1B}[38;5;16;48;5;196mBlack on Red\u{1B}[0m "
-        result += "\u{1B}[38;5;46;48;5;16mGreen on Black\u{1B}[0m "
-        result += "\u{1B}[38;5;16;48;5;46mBlack on Green\u{1B}[0m\n\n"
-        
-        result += "=== End XTERM 256-Color Test ===\n"
-        
-        return result
     }
     
     // MARK: - tbaMUD Color Code Support
@@ -600,7 +461,6 @@ class ANSIProcessor {
         var result = text
         
         for match in matches {
-            let fullMatch = nsText.substring(with: match.range)
             let type = nsText.substring(with: match.range(at: 1))
             let code = nsText.substring(with: match.range(at: 2))
             

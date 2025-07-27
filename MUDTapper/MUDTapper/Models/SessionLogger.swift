@@ -48,7 +48,6 @@ class SessionLogger {
         
         // Check if auto-logging is enabled or if forced
         guard force || autoLoggingEnabled else {
-            print("📝 Auto-logging is disabled, skipping log start")
             return
         }
         
@@ -84,10 +83,8 @@ class SessionLogger {
             """
             writeToLog(header)
             
-            print("📝 Session logging started: \(filename)")
-            
         } catch {
-            print("❌ Failed to start logging: \(error.localizedDescription)")
+            // Failed to start logging
             _isLogging = false
             fileHandle = nil
         }
@@ -115,8 +112,6 @@ class SessionLogger {
         worldInfo = nil
         startTime = nil
         currentLogFileURL = nil
-        
-        print("📝 Session logging stopped")
     }
     
     func writeToLog(_ text: String) {
@@ -184,7 +179,7 @@ class SessionLogger {
                 return date1 > date2 // Most recent first
             }
         } catch {
-            print("❌ Failed to list log files: \(error.localizedDescription)")
+            // Failed to list log files
             return []
         }
     }
@@ -194,7 +189,7 @@ class SessionLogger {
             try FileManager.default.removeItem(at: url)
             return true
         } catch {
-            print("❌ Failed to delete log file: \(error.localizedDescription)")
+            // Failed to delete log file
             return false
         }
     }
@@ -225,11 +220,10 @@ class SessionLogger {
             let maxSize: Int64 = 50 * 1024 * 1024 // 50MB limit
             
             if fileSize > maxSize {
-                print("📝 Log file size (\(ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file))) exceeds limit, rotating...")
                 rotateCurrentLog()
             }
         } catch {
-            print("❌ Failed to check log file size: \(error.localizedDescription)")
+            // Failed to check log file size
         }
     }
     
@@ -243,9 +237,9 @@ class SessionLogger {
         let rotatedURL = currentURL.appendingPathExtension("rotated")
         do {
             try FileManager.default.moveItem(at: currentURL, to: rotatedURL)
-            print("📝 Rotated log file to: \(rotatedURL.lastPathComponent)")
+            // Log file rotated
         } catch {
-            print("❌ Failed to rotate log file: \(error.localizedDescription)")
+            // Failed to rotate log file
         }
         
         // Start new log

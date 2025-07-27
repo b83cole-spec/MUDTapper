@@ -193,7 +193,6 @@ public class Trigger: NSManagedObject {
             do {
                 return try NSRegularExpression(pattern: pattern, options: options)
             } catch {
-                print("Trigger: Invalid regex pattern '\(pattern)': \(error)")
                 return nil
             }
             
@@ -207,7 +206,6 @@ public class Trigger: NSManagedObject {
             do {
                 return try NSRegularExpression(pattern: "^" + regexPattern + "$", options: options)
             } catch {
-                print("Trigger: Invalid wildcard pattern '\(pattern)': \(error)")
                 return nil
             }
             
@@ -225,32 +223,24 @@ public class Trigger: NSManagedObject {
         let testLine = shouldIgnoreCase ? line.lowercased() : line
         let testPattern = shouldIgnoreCase ? pattern.lowercased() : pattern
         
-        // Debug: Log the matching attempt
-        print("    🎯 Matching: '\(testLine)' against pattern: '\(testPattern)' (ignoreCase: \(shouldIgnoreCase))")
-        
         let result: Bool
         switch triggerTypeEnum {
         case .exact:
             result = testLine.trimmingCharacters(in: .whitespacesAndNewlines) == testPattern
-            print("    📝 Exact match result: \(result)")
             
         case .substring:
             result = testLine.contains(testPattern)
-            print("    📝 Substring match result: \(result)")
             
         case .beginsWith:
             result = testLine.hasPrefix(testPattern)
-            print("    📝 BeginsWith match result: \(result)")
             
         case .endsWith:
             result = testLine.hasSuffix(testPattern)
-            print("    📝 EndsWith match result: \(result)")
             
         case .regex, .wildcard:
             guard let regex = compiledRegex else { return false }
             let range = NSRange(location: 0, length: line.utf16.count)
             result = regex.firstMatch(in: line, options: [], range: range) != nil
-            print("    📝 Regex/Wildcard match result: \(result)")
         }
         
         return result

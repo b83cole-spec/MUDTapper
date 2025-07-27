@@ -446,8 +446,8 @@ tbaMUD 256-Color Test:
     }
     
     func testXterm256ColorPalette() {
-        let testText = ansiProcessor.testXterm256Colors()
-        appendText(testText)
+        // Test xterm256 color palette - removed debug method
+        appendText("Xterm256 color palette test removed for production\n")
     }
     
     func scrollToBottom() {

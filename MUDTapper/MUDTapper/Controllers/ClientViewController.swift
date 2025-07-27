@@ -121,13 +121,11 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
         
         if let world = try? context.existingObject(with: worldID) as? World {
             if !world.isDeleted && !world.isHidden {
-                print("ClientViewController: Creating client for world: \(world.name ?? "Unknown")")
+                // Client created for world
             } else {
-                print("ClientViewController: World is deleted or hidden, will create empty client")
                 client.worldObjectID = nil
             }
         } else {
-            print("ClientViewController: Invalid world ID, will create empty client")
             client.worldObjectID = nil
         }
         
@@ -515,7 +513,6 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     
     private func loadWorld() {
         guard let worldID = worldObjectID else { 
-            print("ClientViewController: No world ID provided")
             showNoWorldView()
             return 
         }
@@ -524,23 +521,19 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
         
         // Safely load the world object
         guard let world = try? context.existingObject(with: worldID) as? World else {
-            print("ClientViewController: Failed to load world object")
             showNoWorldView()
             return
         }
         
         // Check if world is valid and not hidden
         if world.isDeleted || world.isHidden {
-            print("ClientViewController: World is deleted or hidden")
             showNoWorldView()
             return
         }
         
-                currentWorld = world
+        currentWorld = world
         hostname = currentWorld?.hostname
         port = currentWorld?.port ?? 23
-
-        print("ClientViewController: Successfully loaded world: \(world.name ?? "Unknown")")
         
         // Update trigger notification observer for the new world
         updateTriggerNotificationObserver()
@@ -2223,31 +2216,27 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     // MARK: - App State Handling
     
     func handleAppStateChange(_ notificationName: Notification.Name) {
-        print("ClientViewController: Handling app state change: \(notificationName)")
-        
         switch notificationName {
         case .appDidBecomeActive:
             // App became active - check connection status
             if currentWorld != nil, !isConnected {
                 // Try to reconnect if we have a world but aren't connected
-                print("ClientViewController: App became active, attempting to reconnect")
                 connect()
             }
             
         case .appDidEnterBackground:
             // App entered background - ensure we send a keep-alive
             if isConnected {
-                print("ClientViewController: App entering background, sending keep-alive")
                 // The MUDSocket will handle sending keep-alive automatically
             }
             
         case .appWillResignActive:
             // App will resign active - prepare for background
-            print("ClientViewController: App will resign active")
+            break
             
         case .appWillEnterForeground:
             // App will enter foreground - prepare for reconnection
-            print("ClientViewController: App will enter foreground")
+            break
             
         default:
             break
@@ -2269,11 +2258,8 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     @objc private func handleTriggerCommand(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
               let commands = userInfo["commands"] as? [String] else {
-            print("❌ Trigger notification missing commands")
             return
         }
-        
-        print("🎯 Processing trigger commands: \(commands)")
         
         for command in commands {
             processCommand(command)
@@ -2690,7 +2676,7 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     }
     
     func handleXterm256ServerResponse(_ response: String) {
-        print("[XTERM256 DEBUG] Server response: \(response)")
+                        // Server response received
         awaitingXterm256Response = false
     }
 }
@@ -2779,13 +2765,8 @@ extension ClientViewController: MUDSocketDelegate {
     }
     
     func mudSocket(_ socket: MUDSocket, didReceiveData data: Data) {
-        // Print server response if awaiting xterm256/luaxterm256
+        // Handle xterm256/luaxterm256 response
         if awaitingXterm256Response {
-            if let responseString = String(data: data, encoding: .utf8) {
-                print("[XTERM256 DEBUG] Raw server response: \(responseString)")
-            } else {
-                print("[XTERM256 DEBUG] Raw server response (non-UTF8): \(data)")
-            }
             awaitingXterm256Response = false
         }
         
