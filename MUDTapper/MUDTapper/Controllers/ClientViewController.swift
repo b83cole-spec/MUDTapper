@@ -2856,7 +2856,12 @@ extension ClientViewController {
         
         // Add new alias
         alert.addAction(UIAlertAction(title: "➕ New Alias", style: .default) { [weak self] _ in
-            self?.createPersistentNewAlias(world: world)
+            guard let self = self else { return }
+            let editor = AliasEditorViewController(world: world)
+            editor.onDismiss = { [weak self] in self?.refreshCurrentPersistentMenu() }
+            let nav = UINavigationController(rootViewController: editor)
+            nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+            self.present(nav, animated: true)
         })
         
         // List existing aliases
@@ -2866,7 +2871,12 @@ extension ClientViewController {
             for alias in aliases {
                 let title = "📋 \(alias.name ?? "Unknown") → \(alias.commands ?? "")"
                 alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-                    self?.showAliasOptionsMenu(alias, world: world)
+                    guard let self = self else { return }
+                    let editor = AliasEditorViewController(world: world, alias: alias)
+                    editor.onDismiss = { [weak self] in self?.showPersistentAliasesMenu(world: world) }
+                    let nav = UINavigationController(rootViewController: editor)
+                    nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+                    self.present(nav, animated: true)
                 })
             }
         }
@@ -3083,7 +3093,12 @@ extension ClientViewController {
         
         // === CREATE ===
         alert.addAction(UIAlertAction(title: "➕ New Trigger", style: .default) { [weak self] _ in
-            self?.createPersistentTrigger(world: world)
+            guard let self = self else { return }
+            let editor = TriggerEditorViewController(world: world)
+            editor.onDismiss = { [weak self] in self?.showPersistentTriggerMenu(world: world) }
+            let nav = UINavigationController(rootViewController: editor)
+            nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+            self.present(nav, animated: true)
         })
         
         // === MANAGE ===
@@ -3100,7 +3115,12 @@ extension ClientViewController {
                 let title = "\(statusIcon) \(typeIcon) \(trigger.displayName)"
                 
                 alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-                    self?.showTriggerOptionsMenu(trigger, world: world)
+                    guard let self = self else { return }
+                    let editor = TriggerEditorViewController(world: world, trigger: trigger)
+                    editor.onDismiss = { [weak self] in self?.showPersistentTriggerMenu(world: world) }
+                    let nav = UINavigationController(rootViewController: editor)
+                    nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+                    self.present(nav, animated: true)
                 })
             }
             
