@@ -988,6 +988,9 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     private func showModernInputSettings() {
         let inputSettings = InputSettingsViewController()
         inputSettings.title = "Input Settings"
+        inputSettings.onDismiss = { [weak self] in
+            self?.refreshCurrentPersistentMenu()
+        }
         let navController = UINavigationController(rootViewController: inputSettings)
         present(navController, animated: true)
     }
@@ -995,6 +998,9 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     private func showModernThemeSettings() {
         let themeSettings = ThemeSettingsViewController()
         themeSettings.title = "Theme Settings"
+        themeSettings.onDismiss = { [weak self] in
+            self?.refreshCurrentPersistentMenu()
+        }
         let navController = UINavigationController(rootViewController: themeSettings)
         present(navController, animated: true)
     }

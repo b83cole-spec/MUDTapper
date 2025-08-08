@@ -84,6 +84,9 @@ class SettingsViewController: UIViewController {
     
     // MARK: - Properties
     
+    // Optional callback invoked after this controller is dismissed via Done
+    var onDismiss: (() -> Void)?
+    
     private var tableView: UITableView!
     private var sections: [SettingsSection] = []
     
@@ -175,7 +178,10 @@ class SettingsViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func doneButtonTapped() {
-        dismiss(animated: true)
+        let completion = onDismiss
+        dismiss(animated: true) {
+            completion?()
+        }
     }
 }
 
