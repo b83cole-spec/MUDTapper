@@ -72,7 +72,8 @@ class AliasEditorViewController: UIViewController {
         nameField.text = alias.name
         // Convert semicolon-separated storage to multi-line for editing
         if let cmds = alias.commands {
-            commandsView.text = cmds.split(separator: ';').map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.joined(separator: "\n")
+            let lines = cmds.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            commandsView.text = lines.joined(separator: "\n")
         }
     }
 

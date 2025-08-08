@@ -78,7 +78,8 @@ class TriggerEditorViewController: UIViewController {
         if let trig = trigger {
             patternField.text = trig.trigger
             if let cmds = trig.commands {
-                commandsView.text = cmds.split(separator: ';').map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.joined(separator: "\n")
+                let lines = cmds.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+                commandsView.text = lines.joined(separator: "\n")
             }
         } else if let initialPattern = initialPattern {
             patternField.text = initialPattern
