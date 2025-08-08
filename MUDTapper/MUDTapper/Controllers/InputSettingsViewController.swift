@@ -23,6 +23,7 @@ class InputSettingsViewController: SettingsViewController {
         let sections: [SettingsSection] = [
             createInputBehaviorSection(),
             createKeyboardSection(),
+            createRadialControlsSection(),
             createCommandSection(),
             createNetworkSection()
         ]
@@ -102,6 +103,78 @@ class InputSettingsViewController: SettingsViewController {
             footer: "Adjust keyboard behavior and settings",
             items: items
         )
+    }
+
+    private func createRadialControlsSection() -> SettingsSection {
+        let currentStyle = RadialControl.radialControlStyle()
+        let items: [SettingsItem] = [
+            NavigationSettingsItem(
+                title: "Left Radial Position",
+                accessibilityHint: "Choose position for left radial controls"
+            ) { [weak self] in
+                self?.presentRadialPositionSelector(isLeftRadial: true)
+                return UIViewController() // placeholder; modal will present
+            },
+            NavigationSettingsItem(
+                title: "Right Radial Position",
+                accessibilityHint: "Choose position for right radial controls"
+            ) { [weak self] in
+                self?.presentRadialPositionSelector(isLeftRadial: false)
+                return UIViewController()
+            },
+            NavigationSettingsItem(
+                title: "Radial Control Style",
+                detail: currentStyle.displayName,
+                accessibilityHint: "Choose a visual style for radial controls"
+            ) { [weak self] in
+                self?.presentRadialStyleSelector()
+                return UIViewController()
+            },
+            ToggleSettingsItem(
+                title: "Show Labels",
+                accessibilityHint: "Show direction labels on radial controls",
+                userDefaultsKey: UserDefaultsKeys.radialControlLabelsVisible,
+                defaultValue: false
+            )
+        ]
+        
+        return SettingsSection(
+            title: "Radial Controls",
+            footer: "Customize radial button positions, style, and labels",
+            items: items
+        )
+    }
+
+    // MARK: - Radial Controls Helpers (modal presenters)
+    private func presentRadialPositionSelector(isLeftRadial: Bool) {
+        let side = isLeftRadial ? "Left" : "Right"
+        let alert = UIAlertController(title: "\(side) Radial Position", message: "Choose position", preferredStyle: .actionSheet)
+        
+        func set(_ position: String) {
+            let key = isLeftRadial ? UserDefaultsKeys.leftRadialPosition : UserDefaultsKeys.rightRadialPosition
+            UserDefaults.standard.set(position, forKey: key)
+        }
+        
+        alert.addAction(UIAlertAction(title: "Top", style: .default) { _ in set("top") })
+        alert.addAction(UIAlertAction(title: "Middle", style: .default) { _ in set("middle") })
+        alert.addAction(UIAlertAction(title: "Bottom", style: .default) { _ in set("bottom") })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func presentRadialStyleSelector() {
+        let alert = UIAlertController(title: "Radial Control Style", message: "Choose a style", preferredStyle: .actionSheet)
+        let current = RadialControl.radialControlStyle()
+        
+        for style in RadialControlStyle.allCases {
+            let title = style.displayName + (style == current ? " ✓" : "")
+            alert.addAction(UIAlertAction(title: title, style: .default) { _ in
+                RadialControl.setRadialControlStyle(style)
+            })
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
     }
     
     private func createCommandSection() -> SettingsSection {
