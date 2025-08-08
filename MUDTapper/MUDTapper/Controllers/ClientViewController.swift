@@ -2616,6 +2616,12 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
 
 extension ClientViewController: InputToolbarDelegate {
     func inputToolbar(_ toolbar: InputToolbar, didSendText text: String) {
+        // If empty input, send a bare newline to server (carriage return)
+        if text.isEmpty {
+            mudSocket?.send("\n")
+            return
+        }
+        
         // Check for multi-session commands (#all or #sessionname)
         if text.hasPrefix("#") {
             processMultiSessionCommand(text)

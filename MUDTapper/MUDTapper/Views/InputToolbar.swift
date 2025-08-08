@@ -426,25 +426,23 @@ class InputToolbar: UIView {
     // MARK: - Private Methods
     
     private func sendText() {
-        guard let text = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else {
-            return
-        }
+        guard let raw = textField.text else { return }
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Immediate UI feedback - disable send button briefly to prevent double-sends
         sendButton.isEnabled = false
         
-        // Add to history before sending
-        addToHistory(text)
+        // Add to history only if non-empty
+        if !text.isEmpty {
+            addToHistory(text)
+        }
         
-        // Send immediately on main queue for best responsiveness
+        // Send immediately on main queue for best responsiveness (even if empty -> sends CRLF)
         delegate?.inputToolbar(self, didSendText: text)
-        
-        // Keep the command in the text field for easy re-use
-        // Don't clear the text field - this allows users to just hit Enter to repeat the command
         
         // Reset history navigation but keep the current command visible
         historyIndex = -1
-        currentInput = text // Set current input to the command we just sent
+        currentInput = text
         updateHistoryButtonStates()
         
         // Select all text so user can easily type a new command if they want
