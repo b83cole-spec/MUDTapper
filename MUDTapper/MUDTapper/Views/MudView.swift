@@ -134,10 +134,11 @@ class MudView: UIView, UIGestureRecognizerDelegate, UITextViewDelegate {
         button.alpha = 0.0
         button.addTarget(self, action: #selector(jumpToLatestTapped), for: .touchUpInside)
         addSubview(button)
+        bringSubviewToFront(button)
         
         NSLayoutConstraint.activate([
-            button.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -12),
-            button.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -80)
+            button.centerXAnchor.constraint(equalTo: centerXAnchor),
+            button.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         
         self.jumpToLatestButton = button
