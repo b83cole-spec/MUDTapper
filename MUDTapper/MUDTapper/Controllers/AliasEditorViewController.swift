@@ -82,7 +82,7 @@ class AliasEditorViewController: UIViewController {
 
     @objc private func saveTapped() {
         let name = (nameField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let lines = commandsView.text.split(whereSeparator: \n).map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        let lines = commandsView.text.split(whereSeparator: { $0.isNewline }).map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         guard !name.isEmpty, !lines.isEmpty else {
             let alert = UIAlertController(title: "Missing Information", message: "Please fill in both alias name and commands", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default))

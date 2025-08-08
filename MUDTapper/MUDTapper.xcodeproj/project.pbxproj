@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        1234567890ALIAS000001 /* AliasEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ALIAS000000 /* AliasEditorViewController.swift */; };
+        1234567890TRIGR000001 /* TriggerEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890TRIGR000000 /* TriggerEditorViewController.swift */; };
 		0A2E3D1D7817FDFC95550806 /* ThemeSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF997AA3624C15E5AE4B9AB2 /* ThemeSettingsViewController.swift */; };
 		0E8D95DC952C8A92A3CF4757 /* MUDTapper.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 38E2007CBADA8A0B272E3570 /* MUDTapper.xcdatamodeld */; };
 		183986E0575BA848DD7470B1 /* WorldCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6251685F95C9F653B7B79E28 /* WorldCardCell.swift */; };
@@ -44,6 +46,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+        1234567890ALIAS000000 /* AliasEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AliasEditorViewController.swift; sourceTree = "<group>"; };
+        1234567890TRIGR000000 /* TriggerEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriggerEditorViewController.swift; sourceTree = "<group>"; };
 		03BFF6C83A25A27685814871 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		04CBFE0E9639B868E0E679DE /* InputSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSettingsViewController.swift; sourceTree = "<group>"; };
 		04F852AEB2F93EAB7BF3927D /* EnhancedWorldManagementViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancedWorldManagementViewController.swift; sourceTree = "<group>"; };
@@ -156,6 +160,8 @@
 				AF997AA3624C15E5AE4B9AB2 /* ThemeSettingsViewController.swift */,
 				41E3B9EE0373278B7B1D8A0C /* WorldDisplayController.swift */,
 				B8CF043AE53F2712FC4463FD /* WorldEditController.swift */,
+                1234567890ALIAS000000 /* AliasEditorViewController.swift */,
+                1234567890TRIGR000000 /* TriggerEditorViewController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -252,6 +258,7 @@
 				9AC30ABFF7B28764F27A9CB4 /* ANSIProcessor.swift in Sources */,
 				9640BA875AD82CAC9CE560DD /* AdvancedAutomationViewController.swift in Sources */,
 				393D16423CC28BA3C11B2BC5 /* Alias.swift in Sources */,
+				1234567890ALIAS000001 /* AliasEditorViewController.swift in Sources */,
 				761201608647B5D61F2DD3FC /* AppDelegate.swift in Sources */,
 				3453EC76B78331BAF1E57252 /* AutomationItemCell.swift in Sources */,
 				4A003A5560EDB30DDDD44FEC /* ClientContainer.swift in Sources */,
@@ -274,6 +281,7 @@
 				CE39F794FA97AA56B68EC16A /* SettingsViewController.swift in Sources */,
 				7B6C02329E1B65AD9571E5B3 /* SilentAudioManager.swift in Sources */,
 				9B878CB8B7565C640A5C17F7 /* ThemeManager.swift in Sources */,
+				1234567890TRIGR000001 /* TriggerEditorViewController.swift in Sources */,
 				0A2E3D1D7817FDFC95550806 /* ThemeSettingsViewController.swift in Sources */,
 				D9C194D1B4A483F1D1848C45 /* Ticker.swift in Sources */,
 				F21203635E7C44025B82BF78 /* Trigger.swift in Sources */,

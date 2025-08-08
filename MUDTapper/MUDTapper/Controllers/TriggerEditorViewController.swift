@@ -91,7 +91,7 @@ class TriggerEditorViewController: UIViewController {
 
     @objc private func saveTapped() {
         let pattern = (patternField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let lines = commandsView.text.split(whereSeparator: \n).map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        let lines = commandsView.text.split(whereSeparator: { $0.isNewline }).map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         guard !pattern.isEmpty, !lines.isEmpty else {
             let alert = UIAlertController(title: "Missing Information", message: "Please enter both pattern and commands", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default))
