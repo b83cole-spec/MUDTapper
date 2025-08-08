@@ -25,7 +25,7 @@ class MUDSocket: NSObject {
     private var isInBackground = false
     private var shouldReconnect = false
     private var reconnectAttempts = 0
-    private let maxReconnectAttempts = 5
+    private let maxReconnectAttempts = Int.max
     private let reconnectDelay: TimeInterval = 2.0
     
     // Background task management
@@ -167,7 +167,7 @@ class MUDSocket: NSObject {
         // Configure for interactive, low-latency communication
         parameters.serviceClass = .interactiveVoice
         parameters.multipathServiceType = .interactive
-        parameters.requiredInterfaceType = .other // Allow any interface
+        // Allow any interface (WiFi or Cellular). Do not restrict interface type.
         
         // Configure TCP options for MUD gaming
         if let tcpOptions = parameters.defaultProtocolStack.transportProtocol as? NWProtocolTCP.Options {

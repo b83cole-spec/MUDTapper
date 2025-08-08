@@ -2144,10 +2144,13 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     func handleAppStateChange(_ notificationName: Notification.Name) {
         switch notificationName {
         case .appDidBecomeActive:
-            // App became active - check connection status
+            // App became active - check connection status and refresh theme
             if currentWorld != nil, !isConnected {
-                // Try to reconnect if we have a world but aren't connected
                 connect()
+            }
+            // Optional: stop background audio on foreground resume
+            if SilentAudioManager.shared.isBackgroundAudioPlaying() {
+                SilentAudioManager.shared.stopBackgroundAudio()
             }
             
         case .appDidEnterBackground:
@@ -2155,6 +2158,8 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
             if isConnected {
                 // The MUDSocket will handle sending keep-alive automatically
             }
+            // Start silent background audio to help keep session alive (if enabled)
+            SilentAudioManager.shared.startBackgroundAudio()
             
         case .appWillResignActive:
             // App will resign active - prepare for background
