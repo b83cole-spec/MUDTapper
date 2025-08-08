@@ -710,7 +710,7 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
             self?.refreshCurrentPersistentMenu()
         }
         let nav = UINavigationController(rootViewController: hub)
-        nav.modalPresentationStyle = .fullScreen
+        nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
         present(nav, animated: true)
     }
     
@@ -746,7 +746,7 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
         })
         
         alert.addAction(UIAlertAction(title: "← Back", style: .cancel) { [weak self] _ in
-            self?.showMainSettingsMenu(world: world)
+            self?.presentFullScreenSettings()
         })
         
         setupAlertForPresentation(alert)
@@ -790,7 +790,7 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
         }
         
         alert.addAction(UIAlertAction(title: "← Back", style: .cancel) { [weak self] _ in
-            self?.showMainSettingsMenu(world: world)
+            self?.presentFullScreenSettings()
         })
         
         setupAlertForPresentation(alert)
@@ -822,11 +822,7 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
         })
         
         alert.addAction(UIAlertAction(title: "← Back", style: .cancel) { [weak self] _ in
-            if let world = self?.currentWorld {
-                self?.showMainSettingsMenu(world: world)
-            } else {
-                self?.showAppOnlySettingsMenu()
-            }
+            self?.presentFullScreenSettings()
         })
         
         setupAlertForPresentation(alert)
@@ -854,11 +850,7 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
         })
         
         alert.addAction(UIAlertAction(title: "← Back", style: .cancel) { [weak self] _ in
-            if let world = self?.currentWorld {
-                self?.showMainSettingsMenu(world: world)
-            } else {
-                self?.showAppOnlySettingsMenu()
-            }
+            self?.presentFullScreenSettings()
         })
         
         setupAlertForPresentation(alert)
@@ -889,11 +881,7 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
         })
         
         alert.addAction(UIAlertAction(title: "← Back", style: .cancel) { [weak self] _ in
-            if let world = self?.currentWorld {
-                self?.showMainSettingsMenu(world: world)
-            } else {
-                self?.showAppOnlySettingsMenu()
-            }
+            self?.presentFullScreenSettings()
         })
         
         setupAlertForPresentation(alert)
