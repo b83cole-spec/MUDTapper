@@ -82,9 +82,13 @@ class SilentAudioManager {
             )
             try audioSession.setActive(true)
             audioSessionActive = true
-            print("SilentAudioManager: Audio session configured successfully")
+        #if DEBUG
+        print("SilentAudioManager: Audio session configured successfully")
+        #endif
         } catch {
+            #if DEBUG
             print("SilentAudioManager: Failed to setup audio session: \(error)")
+            #endif
             audioSessionActive = false
         }
     }
@@ -92,16 +96,22 @@ class SilentAudioManager {
     func startBackgroundAudio() {
         // Check if background audio is disabled by user preference
         guard UserDefaults.standard.bool(forKey: UserDefaultsKeys.backgroundAudioEnabled) else {
+            #if DEBUG
             print("SilentAudioManager: Background audio disabled by user preference")
+            #endif
             return
         }
         
         guard !isPlaying else { 
+            #if DEBUG
             print("SilentAudioManager: Background audio already playing")
+            #endif
             return 
         }
         
+        #if DEBUG
         print("SilentAudioManager: Starting background audio")
+        #endif
         
         // Ensure audio session is active
         if !audioSessionActive {
@@ -116,9 +126,13 @@ class SilentAudioManager {
         
         if audioStarted {
             isPlaying = true
+            #if DEBUG
             print("SilentAudioManager: Background audio started successfully")
+            #endif
         } else {
+            #if DEBUG
             print("SilentAudioManager: Failed to start background audio")
+            #endif
             endBackgroundTask()
         }
     }
@@ -130,12 +144,16 @@ class SilentAudioManager {
         let frameCount = Int(sampleRate * duration)
         
         guard let audioFormat = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1) else {
+            #if DEBUG
             print("SilentAudioManager: Failed to create audio format")
+            #endif
             return false
         }
         
         guard let audioBuffer = AVAudioPCMBuffer(pcmFormat: audioFormat, frameCapacity: AVAudioFrameCount(frameCount)) else {
+            #if DEBUG
             print("SilentAudioManager: Failed to create audio buffer")
+            #endif
             return false
         }
         
@@ -167,10 +185,14 @@ class SilentAudioManager {
             playerNode.scheduleBuffer(audioBuffer, at: nil, options: .loops, completionHandler: nil)
             playerNode.play()
             
+            #if DEBUG
             print("SilentAudioManager: Audio engine started successfully")
+            #endif
             return true
         } catch {
+            #if DEBUG
             print("SilentAudioManager: Failed to start audio engine: \(error)")
+            #endif
             return false
         }
     }
@@ -223,23 +245,33 @@ class SilentAudioManager {
             audioPlayer?.rate = 1.0 // Normal playback rate
             
             // Double check the volume is actually 0
+            #if DEBUG
             print("SilentAudioManager: Audio player volume set to: \(audioPlayer?.volume ?? -1)")
+            #endif
             
             if audioPlayer?.play() == true {
+                #if DEBUG
                 print("SilentAudioManager: Audio player started successfully")
+                #endif
                 return true
             } else {
+                #if DEBUG
                 print("SilentAudioManager: Failed to start audio player")
+                #endif
                 return false
             }
         } catch {
+            #if DEBUG
             print("SilentAudioManager: Failed to create audio player: \(error)")
+            #endif
             return false
         }
     }
     
     private func restartBackgroundAudio() {
+        #if DEBUG
         print("SilentAudioManager: Restarting background audio")
+        #endif
         stopBackgroundAudio()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.startBackgroundAudio()
@@ -250,7 +282,9 @@ class SilentAudioManager {
         endBackgroundTask()
         
         backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(withName: "SilentAudio-Maintenance") {
+            #if DEBUG
             print("SilentAudioManager: Background task expired")
+            #endif
             self.endBackgroundTask()
         }
     }
@@ -265,7 +299,9 @@ class SilentAudioManager {
     func stopBackgroundAudio() {
         guard isPlaying else { return }
         
+        #if DEBUG
         print("SilentAudioManager: Stopping background audio")
+        #endif
         
         audioPlayerNode?.stop()
         audioEngine?.stop()
@@ -278,7 +314,9 @@ class SilentAudioManager {
         
         endBackgroundTask()
         
+        #if DEBUG
         print("SilentAudioManager: Background audio stopped")
+        #endif
     }
     
     func isBackgroundAudioPlaying() -> Bool {

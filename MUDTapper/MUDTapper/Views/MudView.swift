@@ -20,6 +20,9 @@ class MudView: UIView, UIGestureRecognizerDelegate, UITextViewDelegate {
     // Smooth append/scroll management
     private var pendingFragments: [NSAttributedString] = []
     private var appendTimer: Timer?
+    private let minFlushInterval: TimeInterval = 0.02
+    private let maxFlushInterval: TimeInterval = 0.12
+    private var isAppInBackground: Bool = false
     private var autoScrollEnabled: Bool = true
     private var userPausedAutoScroll: Bool = false
     private var unreadCount: Int = 0
@@ -104,6 +107,10 @@ class MudView: UIView, UIGestureRecognizerDelegate, UITextViewDelegate {
         // Configure accessibility for the container
         isAccessibilityElement = false
         accessibilityElements = [textView, leftRadialButton, rightRadialButton].compactMap { $0 }
+
+        // Observe app state for dynamic UI cadence
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAppStateChange(_:)), name: .appDidEnterBackground, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAppStateChange(_:)), name: .appDidBecomeActive, object: nil)
     }
     
     private func setupRadialDirectionalPads() {
@@ -513,8 +520,31 @@ tbaMUD 256-Color Test:
     // Timer-based batching to smooth UI updates when many small fragments arrive
     private func scheduleAppendFlush() {
         appendTimer?.invalidate()
-        // Slightly faster cadence to keep up with bursts while remaining smooth
-        appendTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { [weak self] _ in
+        
+        // Dynamically adapt cadence based on backlog, user intent, and app state
+        let backlog = pendingFragments.count
+        var interval = minFlushInterval
+        
+        if userPausedAutoScroll {
+            // When user is reading older text, slow down updates a bit
+            interval = max(interval, 0.06)
+        }
+        
+        if backlog > 100 {
+            interval = max(interval, 0.10)
+        } else if backlog > 30 {
+            interval = max(interval, 0.06)
+        } else if backlog > 10 {
+            interval = max(interval, 0.04)
+        }
+        
+        if isAppInBackground {
+            // In background, UI rendering is not visible; reduce churn
+            interval = max(interval, 0.12)
+        }
+        
+        let clamped = min(maxFlushInterval, max(minFlushInterval, interval))
+        appendTimer = Timer.scheduledTimer(withTimeInterval: clamped, repeats: false) { [weak self] _ in
             self?.flushPendingFragments()
         }
     }
@@ -533,17 +563,34 @@ tbaMUD 256-Color Test:
         if userPausedAutoScroll { unreadCount += 1 }
         updateJumpToLatestVisibility()
         
-        // Apply with buffer limit
+        // Apply with buffer limit to backing store
         attributedText.append(batch)
         let maxTextLength = 50000
+        var excessLength = 0
         if attributedText.length > maxTextLength {
-            let excessLength = attributedText.length - maxTextLength
+            excessLength = attributedText.length - maxTextLength
             attributedText.deleteCharacters(in: NSRange(location: 0, length: excessLength))
         }
-        textView.attributedText = attributedText
+        
+        // Update the text view incrementally to avoid full re-layouts
+        textView.textStorage.beginEditing()
+        textView.textStorage.append(batch)
+        if excessLength > 0 {
+            // Trim from the start in the visible storage as well
+            textView.textStorage.deleteCharacters(in: NSRange(location: 0, length: excessLength))
+        }
+        textView.textStorage.endEditing()
         
         // Scroll if appropriate
         efficientScrollToBottom()
+    }
+
+    @objc private func handleAppStateChange(_ notification: Notification) {
+        if notification.name == .appDidEnterBackground {
+            isAppInBackground = true
+        } else if notification.name == .appDidBecomeActive {
+            isAppInBackground = false
+        }
     }
     
     func clearText() {

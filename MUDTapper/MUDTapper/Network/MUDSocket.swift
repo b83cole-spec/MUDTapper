@@ -205,7 +205,9 @@ class MUDSocket: NSObject {
         setupNetworkMonitoring()
         startPathMonitoring()
         
+        #if DEBUG
         print("MUDSocket: Connection started, waiting for state updates...")
+        #endif
     }
     
     func disconnect() {
@@ -255,15 +257,21 @@ class MUDSocket: NSObject {
             return 
         }
         
+        #if DEBUG
         print("MUDSocket: Sending \(data.count) bytes of data")
+        #endif
         
         connection.send(content: data, completion: .contentProcessed { [weak self] error in
             DispatchQueue.main.async {
                 guard let strongSelf = self else { return }
                 if let error = error {
+                    #if DEBUG
                     print("MUDSocket: Send error: \(error)")
+                    #endif
                 } else {
+                    #if DEBUG
                     print("MUDSocket: Data sent successfully")
+                    #endif
                     strongSelf.lastActivityTime = Date()
                     strongSelf.delegate?.mudSocket(strongSelf, didWriteDataWithTag: 0)
                 }
@@ -292,7 +300,9 @@ class MUDSocket: NSObject {
     @objc private func handleAppDidBecomeActive() {
         isInBackground = false
         isInDeepBackground = false
+        #if DEBUG
         print("MUDSocket: App became active")
+        #endif
         
         // End all background tasks and timers
         endConnectionMaintenanceTask()
@@ -306,18 +316,26 @@ class MUDSocket: NSObject {
         // Check connection status and reconnect if needed
         if shouldReconnect && connectedHost != nil {
             if isConnected {
+                #if DEBUG
                 print("MUDSocket: Testing connection health after app resume")
+                #endif
                 testConnectionHealth { [weak self] isHealthy in
                     if isHealthy {
+                        #if DEBUG
                         print("MUDSocket: Connection is healthy, resuming normal operation")
+                        #endif
                         self?.startKeepAliveTimer()
                     } else {
+                        #if DEBUG
                         print("MUDSocket: Connection is unhealthy, attempting reconnection")
+                        #endif
                         self?.attemptReconnect()
                     }
                 }
             } else {
+                #if DEBUG
                 print("MUDSocket: Not connected, attempting to reconnect after app became active")
+                #endif
                 attemptReconnect()
             }
         }
@@ -325,7 +343,9 @@ class MUDSocket: NSObject {
     
     @objc private func handleAppDidEnterBackground() {
         isInBackground = true
+        #if DEBUG
         print("MUDSocket: App entered background")
+        #endif
         
         // Stop foreground keep-alive timer
         stopKeepAliveTimer()
@@ -343,7 +363,9 @@ class MUDSocket: NSObject {
             // Set up background task chaining for extended background time
             startBackgroundTaskChaining()
             
+            #if DEBUG
             print("MUDSocket: Started comprehensive connection maintenance for background")
+            #endif
         }
     }
     
@@ -428,17 +450,23 @@ class MUDSocket: NSObject {
         }
         
         reconnectAttempts += 1
+        #if DEBUG
         print("MUDSocket: Attempting reconnection \(reconnectAttempts)/\(maxReconnectAttempts)")
+        #endif
         
         guard let host = connectedHost, connectedPort > 0 else {
+            #if DEBUG
             print("MUDSocket: No connection info available for reconnection")
+            #endif
             return
         }
         
         do {
             try connect(to: host, port: connectedPort)
         } catch {
+            #if DEBUG
             print("MUDSocket: Reconnection failed: \(error)")
+            #endif
             scheduleReconnectAttempt()
         }
     }
@@ -463,20 +491,28 @@ class MUDSocket: NSObject {
         endConnectionMaintenanceTask()
         endBackgroundTask()
         
+        #if DEBUG
         print("MUDSocket: Starting connection maintenance task")
+        #endif
         backgroundTaskStartTime = Date()
         
         connectionMaintenanceTask = UIApplication.shared.beginBackgroundTask(withName: "MUDSocket-ConnectionMaintenance") { [weak self] in
+            #if DEBUG
             print("MUDSocket: Connection maintenance task expired")
+            #endif
             self?.handleBackgroundTaskExpiration()
         }
         
         if connectionMaintenanceTask == .invalid {
+            #if DEBUG
             print("MUDSocket: Failed to start connection maintenance task")
+            #endif
             return
         }
         
+        #if DEBUG
         print("MUDSocket: Connection maintenance task started with ID: \(connectionMaintenanceTask.rawValue)")
+        #endif
         
         // Start aggressive background keep-alive
         startBackgroundKeepAlive(interval: getAdaptiveKeepAliveInterval())
@@ -488,7 +524,9 @@ class MUDSocket: NSObject {
     private func endConnectionMaintenanceTask() {
         guard connectionMaintenanceTask != .invalid else { return }
         
+        #if DEBUG
         print("MUDSocket: Ending connection maintenance task")
+        #endif
         stopBackgroundKeepAlive()
         stopBackgroundTimeMonitoring()
         
@@ -498,7 +536,9 @@ class MUDSocket: NSObject {
     }
     
     private func handleBackgroundTaskExpiration() {
+        #if DEBUG
         print("MUDSocket: Background task expiring - implementing graceful degradation")
+        #endif
         
         // This is called when iOS is about to suspend the app
         // We need to handle this quickly to avoid being killed by the watchdog
@@ -509,7 +549,9 @@ class MUDSocket: NSObject {
         
         if isConnected {
             // Send a final keep-alive if possible (non-blocking)
+            #if DEBUG
             print("MUDSocket: Sending final keep-alive before suspension")
+            #endif
             sendKeepAlive()
             
             // Note: We deliberately do NOT disconnect here
@@ -532,11 +574,15 @@ class MUDSocket: NSObject {
             let backgroundTimeRemaining = UIApplication.shared.backgroundTimeRemaining
             let taskDuration = self.backgroundTaskStartTime?.timeIntervalSinceNow ?? 0
             
+            #if DEBUG
             print("MUDSocket: Background time remaining: \(backgroundTimeRemaining)s, task duration: \(-taskDuration)s")
+            #endif
             
             // If we're running low on time, reduce keep-alive frequency
             if backgroundTimeRemaining < 30 {
+                #if DEBUG
                 print("MUDSocket: Low background time remaining, reducing keep-alive frequency")
+                #endif
                 self.stopBackgroundKeepAlive()
                 // Send one final keep-alive
                 self.sendKeepAlive()
@@ -561,21 +607,29 @@ class MUDSocket: NSObject {
     private func startBackgroundTask() {
         guard backgroundTask == .invalid else { return }
         
+        #if DEBUG
         print("MUDSocket: Starting legacy background task")
+        #endif
         backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: { [weak self] in
+            #if DEBUG
             print("MUDSocket: Legacy background task expired")
+            #endif
             self?.endBackgroundTask()
         })
         
         if backgroundTask == .invalid {
+            #if DEBUG
             print("MUDSocket: Failed to start legacy background task")
+            #endif
         }
     }
     
     private func endBackgroundTask() {
         guard backgroundTask != .invalid else { return }
         
+        #if DEBUG
         print("MUDSocket: Ending legacy background task")
+        #endif
         UIApplication.shared.endBackgroundTask(backgroundTask)
         backgroundTask = .invalid
     }
@@ -583,31 +637,41 @@ class MUDSocket: NSObject {
     private func startBackgroundKeepAlive(interval: TimeInterval = 10.0) {
         stopBackgroundKeepAlive()
         
+        #if DEBUG
         print("MUDSocket: Starting background keep-alive with \(interval)s interval")
+        #endif
         
         // Send keep-alive every specified interval in background
         backgroundKeepAliveTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             
             if self.isConnected {
+                #if DEBUG
                 print("MUDSocket: Sending background keep-alive")
+                #endif
                 self.sendKeepAlive()
                 
                 // Adaptive frequency based on background time remaining
                 let backgroundTimeRemaining = UIApplication.shared.backgroundTimeRemaining
                 if backgroundTimeRemaining < 60 && interval < 15.0 {
                     // If we're running low on background time, reduce frequency
+                    #if DEBUG
                     print("MUDSocket: Reducing keep-alive frequency due to limited background time")
+                    #endif
                     self.stopBackgroundKeepAlive()
                     self.startBackgroundKeepAlive(interval: 15.0)
                 } else if backgroundTimeRemaining > 120 && interval > 8.0 {
                     // If we have plenty of background time, increase frequency
+                    #if DEBUG
                     print("MUDSocket: Increasing keep-alive frequency with abundant background time")
+                    #endif
                     self.stopBackgroundKeepAlive()
                     self.startBackgroundKeepAlive(interval: 8.0)
                 }
             } else {
+                #if DEBUG
                 print("MUDSocket: Not connected, stopping background keep-alive")
+                #endif
                 self.stopBackgroundKeepAlive()
             }
         }
@@ -623,13 +687,17 @@ class MUDSocket: NSObject {
     private func setupNetworkMonitoring() {
         guard let host = connectedHost, !isMonitoringNetwork else { return }
         
+        #if DEBUG
         print("MUDSocket: Setting up network monitoring for \(host)")
+        #endif
         
         // Create reachability reference
         reachability = SCNetworkReachabilityCreateWithName(nil, host)
         
         guard let reachability = reachability else {
+            #if DEBUG
             print("MUDSocket: Failed to create reachability reference")
+            #endif
             return
         }
         
@@ -645,19 +713,27 @@ class MUDSocket: NSObject {
         if SCNetworkReachabilitySetCallback(reachability, callback, &context) {
             if SCNetworkReachabilityScheduleWithRunLoop(reachability, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue) {
                 isMonitoringNetwork = true
+                #if DEBUG
                 print("MUDSocket: Network monitoring started")
+                #endif
                 
                 // Get initial status
                 var flags = SCNetworkReachabilityFlags()
                 if SCNetworkReachabilityGetFlags(reachability, &flags) {
                     lastNetworkStatus = flags
+                    #if DEBUG
                     print("MUDSocket: Initial network status: \(flags)")
+                    #endif
                 }
             } else {
+                #if DEBUG
                 print("MUDSocket: Failed to schedule network monitoring")
+                #endif
             }
         } else {
+            #if DEBUG
             print("MUDSocket: Failed to set network monitoring callback")
+            #endif
         }
     }
     
@@ -668,7 +744,9 @@ class MUDSocket: NSObject {
         self.reachability = nil
         isMonitoringNetwork = false
         lastNetworkStatus = nil
+        #if DEBUG
         print("MUDSocket: Network monitoring stopped")
+        #endif
     }
     
     // MARK: - NWPath monitoring
@@ -678,7 +756,9 @@ class MUDSocket: NSObject {
         pathMonitor = monitor
         monitor.pathUpdateHandler = { [weak self] path in
             guard let self = self else { return }
+            #if DEBUG
             print("MUDSocket: NWPath update: status=\(path.status), expensive=\(path.isExpensive), constrained=\(path.isConstrained)")
+            #endif
             if path.status == .satisfied {
                 if self.shouldReconnect && !self.isConnected {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -696,7 +776,9 @@ class MUDSocket: NSObject {
     }
     
     private func handleNetworkChange(flags: SCNetworkReachabilityFlags) {
+        #if DEBUG
         print("MUDSocket: Network status changed: \(flags)")
+        #endif
         
         let wasReachable = lastNetworkStatus?.contains(.reachable) ?? false
         let isReachable = flags.contains(.reachable)
@@ -706,16 +788,22 @@ class MUDSocket: NSObject {
         
         // Log network interface type
         let interfaceType = getNetworkInterfaceType(flags: flags)
+        #if DEBUG
         print("MUDSocket: Current network interface: \(interfaceType)")
+        #endif
         
         lastNetworkStatus = flags
         
         if interfaceChanged {
+            #if DEBUG
             print("MUDSocket: Network interface changed, connection may be affected")
+            #endif
             
             // If we were connected and network interface changed, attempt reconnection
             if isConnected && isReachable {
+                #if DEBUG
                 print("MUDSocket: Network interface changed, attempting reconnection")
+                #endif
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                     self?.attemptReconnectionAfterNetworkChange()
                 }
@@ -723,7 +811,9 @@ class MUDSocket: NSObject {
         }
         
         if !wasReachable && isReachable {
+            #if DEBUG
             print("MUDSocket: Network became reachable")
+            #endif
             // Network became available, try to reconnect if we should be connected
             if shouldReconnect && !isConnected {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
@@ -731,7 +821,9 @@ class MUDSocket: NSObject {
                 }
             }
         } else if wasReachable && !isReachable {
+            #if DEBUG
             print("MUDSocket: Network became unreachable")
+            #endif
             // Network became unavailable, this will be handled by connection failure
         }
     }
@@ -749,7 +841,9 @@ class MUDSocket: NSObject {
     private func attemptReconnectionAfterNetworkChange() {
         guard shouldReconnect && connectedHost != nil else { return }
         
+        #if DEBUG
         print("MUDSocket: Attempting reconnection after network interface change")
+        #endif
         
         // Force disconnect current connection
         connection?.cancel()
@@ -769,7 +863,9 @@ class MUDSocket: NSObject {
     func enableVoIPBackgroundProtection() {
         guard !isVoIPSocketEnabled else { return }
         
+        #if DEBUG
         print("MUDSocket: Enabling VoIP background protection")
+        #endif
         isVoIPSocketEnabled = true
         
         // Start VoIP background task
@@ -785,7 +881,9 @@ class MUDSocket: NSObject {
     func disableVoIPBackgroundProtection() {
         guard isVoIPSocketEnabled else { return }
         
+        #if DEBUG
         print("MUDSocket: Disabling VoIP background protection")
+        #endif
         isVoIPSocketEnabled = false
         
         cleanupVoIPSocket()
@@ -807,33 +905,45 @@ class MUDSocket: NSObject {
             tcpOptions.noDelay = true
         }
         
+        #if DEBUG
         print("MUDSocket: Configured connection for VoIP operation")
+        #endif
     }
     
     private func startVoIPBackgroundTask() {
         endVoIPBackgroundTask() // Clean up any existing task
         
+        #if DEBUG
         print("MUDSocket: Starting VoIP background task")
+        #endif
         voipBackgroundTask = UIApplication.shared.beginBackgroundTask(withName: "MUDSocket-VoIP-Protection") { [weak self] in
+            #if DEBUG
             print("MUDSocket: VoIP background task expired")
+            #endif
             self?.handleVoIPBackgroundTaskExpiration()
         }
         
         if voipBackgroundTask == .invalid {
+            #if DEBUG
             print("MUDSocket: Failed to start VoIP background task")
+            #endif
         }
     }
     
     private func endVoIPBackgroundTask() {
         guard voipBackgroundTask != .invalid else { return }
         
+        #if DEBUG
         print("MUDSocket: Ending VoIP background task")
+        #endif
         UIApplication.shared.endBackgroundTask(voipBackgroundTask)
         voipBackgroundTask = .invalid
     }
     
     private func handleVoIPBackgroundTaskExpiration() {
+        #if DEBUG
         print("MUDSocket: VoIP background task expiring - attempting to maintain connection")
+        #endif
         
         // Send keep-alive immediately
         sendKeepAlive()
@@ -864,23 +974,31 @@ class MUDSocket: NSObject {
     private func startConnectionLossDetection() {
         stopConnectionLossDetection()
         
+        #if DEBUG
         print("MUDSocket: Starting connection loss detection")
+        #endif
         
         connectionLossDetectionTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             
             let timeSinceLastData = Date().timeIntervalSince(self.lastDataReceiveTime)
+            #if DEBUG
             print("MUDSocket: Time since last data: \(timeSinceLastData)s")
+            #endif
             
             // If we haven't received data in 60 seconds, send a health check
             if timeSinceLastData > 60 {
+                #if DEBUG
                 print("MUDSocket: No data received for 60s, sending health check")
+                #endif
                 self.sendBackgroundHealthCheck()
             }
             
             // If no data for 120 seconds, consider connection lost
             if timeSinceLastData > 120 {
+                #if DEBUG
                 print("MUDSocket: Connection appears lost, attempting recovery")
+                #endif
                 self.handleBackgroundConnectionLoss()
             }
         }
@@ -895,25 +1013,33 @@ class MUDSocket: NSObject {
     private func sendBackgroundHealthCheck() {
         guard isConnected else { return }
         
+        #if DEBUG
         print("MUDSocket: Sending background health check")
+        #endif
         
         // Send a minimal command that should provoke a response
         let healthCheck = "look\n".data(using: .utf8)!
         
         connection?.send(content: healthCheck, completion: .contentProcessed { [weak self] error in
             if let error = error {
+                #if DEBUG
                 print("MUDSocket: Background health check failed: \(error)")
+                #endif
                 self?.consecutiveKeepAliveFailures += 1
                 
                 // If we've had multiple failures, attempt reconnection
                 if self?.consecutiveKeepAliveFailures ?? 0 >= 3 {
+                    #if DEBUG
                     print("MUDSocket: Multiple health check failures, attempting reconnection")
+                    #endif
                     DispatchQueue.main.async {
                         self?.handleBackgroundConnectionLoss()
                     }
                 }
             } else {
+                #if DEBUG
                 print("MUDSocket: Background health check succeeded")
+                #endif
                 self?.consecutiveKeepAliveFailures = 0
             }
         })
@@ -921,7 +1047,9 @@ class MUDSocket: NSObject {
 
     /// Handle connection loss detected during background operation
     private func handleBackgroundConnectionLoss() {
+        #if DEBUG
         print("MUDSocket: Handling background connection loss")
+        #endif
         
         // Mark as in deep background to use more aggressive reconnection
         isInDeepBackground = true
@@ -943,17 +1071,29 @@ class MUDSocket: NSObject {
     private func startBackgroundTaskChaining() {
         stopBackgroundTaskChaining()
         
+        #if DEBUG
+        #if DEBUG
         print("MUDSocket: Starting background task chaining")
+        #endif
+        #endif
         
         // Chain background tasks every 25 seconds to maximize background time
         backgroundTaskChainTimer = Timer.scheduledTimer(withTimeInterval: 25.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             
             let backgroundTimeRemaining = UIApplication.shared.backgroundTimeRemaining
+            #if DEBUG
+            #if DEBUG
             print("MUDSocket: Background time remaining: \(backgroundTimeRemaining)s")
+            #endif
+            #endif
             
             if backgroundTimeRemaining < 40 {
+                #if DEBUG
+                #if DEBUG
                 print("MUDSocket: Low background time, creating new background task")
+                #endif
+                #endif
                 self.chainBackgroundTask()
             }
             
@@ -977,7 +1117,9 @@ class MUDSocket: NSObject {
         // Start a new one
         startConnectionMaintenanceTask()
         
+        #if DEBUG
         print("MUDSocket: Chained background task for extended execution")
+        #endif
     }
     
     // MARK: - Connection Quality Management
@@ -992,7 +1134,9 @@ class MUDSocket: NSObject {
             connectionQualityScore = max(0, connectionQualityScore - 5)
         }
         
+        #if DEBUG
         print("MUDSocket: Connection quality score: \(connectionQualityScore)")
+        #endif
     }
     
     /// Get adaptive keep-alive interval based on connection quality
@@ -1010,11 +1154,15 @@ class MUDSocket: NSObject {
     // MARK: - Private Methods
     
     private func handleStateUpdate(_ state: NWConnection.State) {
+        #if DEBUG
         print("MUDSocket: State update: \(state)")
+        #endif
         
         switch state {
         case .ready:
+            #if DEBUG
             print("MUDSocket: Connection is ready")
+            #endif
             reconnectAttempts = 0 // Reset reconnection attempts on successful connection
             // Send MSDP XTERM_256_COLORS=1 to server
             sendXterm256Colors()
@@ -1029,13 +1177,17 @@ class MUDSocket: NSObject {
             }
             
         case .failed(let error):
+            #if DEBUG
             print("MUDSocket: Connection failed with error: \(error)")
+            #endif
             stopKeepAliveTimer()
             
             // Check if this might be due to socket resource reclamation
             let isResourceReclamation = isSocketResourceReclamationError(error)
             if isResourceReclamation {
+                #if DEBUG
                 print("MUDSocket: Detected socket resource reclamation")
+                #endif
             }
             
             DispatchQueue.main.async {
@@ -1055,7 +1207,9 @@ class MUDSocket: NSObject {
             }
             
         case .cancelled:
+            #if DEBUG
             print("MUDSocket: Connection was cancelled")
+            #endif
             stopKeepAliveTimer()
             DispatchQueue.main.async {
                 self.delegate?.mudSocket(self, didDisconnectWithError: nil)
@@ -1064,16 +1218,24 @@ class MUDSocket: NSObject {
             shouldReconnect = false
             
         case .waiting(let error):
+            #if DEBUG
             print("MUDSocket: Connection is waiting: \(error)")
+            #endif
             
         case .preparing:
+            #if DEBUG
             print("MUDSocket: Connection is preparing")
+            #endif
             
         case .setup:
+            #if DEBUG
             print("MUDSocket: Connection is setting up")
+            #endif
             
         @unknown default:
+            #if DEBUG
             print("MUDSocket: Unknown connection state: \(state)")
+            #endif
         }
     }
     
@@ -1102,13 +1264,19 @@ class MUDSocket: NSObject {
     private func startReceiving() {
         guard let connection = connection else { return }
         
+        #if DEBUG
         print("MUDSocket: Starting to receive data...")
+        #endif
         
         connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
+            #if DEBUG
             print("MUDSocket: Received callback - data: \(data?.count ?? 0) bytes, isComplete: \(isComplete), error: \(String(describing: error))")
+            #endif
             
             if let data = data, !data.isEmpty {
+                #if DEBUG
                 print("MUDSocket: Received \(data.count) bytes of data")
+                #endif
                 
                 // Update last data receive time for connection monitoring
                 self?.lastDataReceiveTime = Date()
@@ -1122,11 +1290,15 @@ class MUDSocket: NSObject {
                     self?.delegate?.mudSocket(self!, didReceiveData: filtered)
                 }
             } else {
+                #if DEBUG
                 print("MUDSocket: No data received")
+                #endif
             }
             
             if let error = error {
+                #if DEBUG
                 print("MUDSocket: Receive error: \(error)")
+                #endif
                 DispatchQueue.main.async {
                     self?.delegate?.mudSocket(self!, didDisconnectWithError: error)
                 }
@@ -1134,7 +1306,9 @@ class MUDSocket: NSObject {
             }
             
             if isComplete {
+                #if DEBUG
                 print("MUDSocket: Connection completed")
+                #endif
                 DispatchQueue.main.async {
                     self?.delegate?.mudSocket(self!, didDisconnectWithError: nil)
                 }
