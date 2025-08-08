@@ -230,8 +230,14 @@ class MUDSocket: NSObject {
         
         var dataToSend = text
         
-        // Ensure line ending
-        if !dataToSend.hasSuffix("\r\n") && !dataToSend.hasSuffix("\n") {
+        // Normalize line endings to CRLF
+        if dataToSend.hasSuffix("\r\n") {
+            // already normalized
+        } else if dataToSend.hasSuffix("\n") {
+            dataToSend = String(dataToSend.dropLast()) + "\r\n"
+        } else if dataToSend.isEmpty {
+            dataToSend = "\r\n"
+        } else {
             dataToSend += "\r\n"
         }
         
@@ -253,12 +259,13 @@ class MUDSocket: NSObject {
         
         connection.send(content: data, completion: .contentProcessed { [weak self] error in
             DispatchQueue.main.async {
+                guard let strongSelf = self else { return }
                 if let error = error {
                     print("MUDSocket: Send error: \(error)")
                 } else {
                     print("MUDSocket: Data sent successfully")
-                    self?.lastActivityTime = Date()
-                    self?.delegate?.mudSocket(self!, didWriteDataWithTag: 0)
+                    strongSelf.lastActivityTime = Date()
+                    strongSelf.delegate?.mudSocket(strongSelf, didWriteDataWithTag: 0)
                 }
             }
         })

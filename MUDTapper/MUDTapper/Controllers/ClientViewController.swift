@@ -2616,9 +2616,9 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
 
 extension ClientViewController: InputToolbarDelegate {
     func inputToolbar(_ toolbar: InputToolbar, didSendText text: String) {
-        // If empty input, send a bare newline to server (carriage return)
+        // If empty input, send a normalized CRLF to server
         if text.isEmpty {
-            mudSocket?.send("\n")
+            mudSocket?.send("")
             return
         }
         
