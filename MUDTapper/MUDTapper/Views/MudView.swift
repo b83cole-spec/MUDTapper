@@ -21,6 +21,7 @@ class MudView: UIView, UIGestureRecognizerDelegate, UITextViewDelegate {
     private var pendingFragments: [NSAttributedString] = []
     private var appendTimer: Timer?
     private var autoScrollEnabled: Bool = true
+    private var userPausedAutoScroll: Bool = false
     private var unreadCount: Int = 0
     private var jumpToLatestButton: UIButton?
     private var longPressGesture: UILongPressGestureRecognizer!
@@ -472,6 +473,7 @@ tbaMUD 256-Color Test:
     }
     
     func scrollToBottom() {
+        userPausedAutoScroll = false
         autoScrollEnabled = true
         unreadCount = 0
         updateJumpToLatestVisibility()
@@ -511,7 +513,8 @@ tbaMUD 256-Color Test:
     // Timer-based batching to smooth UI updates when many small fragments arrive
     private func scheduleAppendFlush() {
         appendTimer?.invalidate()
-        appendTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: false) { [weak self] _ in
+        // Slightly faster cadence to keep up with bursts while remaining smooth
+        appendTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { [weak self] _ in
             self?.flushPendingFragments()
         }
     }
@@ -525,10 +528,9 @@ tbaMUD 256-Color Test:
         let batch = NSMutableAttributedString()
         fragments.forEach { batch.append($0) }
         
-        // Track whether user is reading older text
-        let wasNearBottom = isNearBottom()
-        autoScrollEnabled = wasNearBottom
-        if !wasNearBottom { unreadCount += 1 }
+        // Respect user intent: only pause when user has scrolled up
+        autoScrollEnabled = !userPausedAutoScroll
+        if userPausedAutoScroll { unreadCount += 1 }
         updateJumpToLatestVisibility()
         
         // Apply with buffer limit
@@ -597,9 +599,11 @@ tbaMUD 256-Color Test:
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        // Toggle auto-scroll when user scrolls away from bottom
-        if scrollView.isDragging || scrollView.isDecelerating {
-            autoScrollEnabled = isNearBottom()
+        // Only treat it as user-paused if the user is dragging (not when content grows quickly)
+        if scrollView.isDragging {
+            let nowNearBottom = isNearBottom()
+            userPausedAutoScroll = !nowNearBottom
+            autoScrollEnabled = !userPausedAutoScroll
             updateJumpToLatestVisibility()
         }
     }
