@@ -701,97 +701,20 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     }
     
     @objc private func settingsButtonTapped() {
-        if let world = currentWorld {
-            showMainSettingsMenu(world: world)
-        } else {
-            showAppOnlySettingsMenu()
-        }
+        presentFullScreenSettings()
     }
     
-    private func showMainSettingsMenu(world: World) {
-        let alert = UIAlertController(title: "Settings", message: "Choose a category to configure", preferredStyle: .actionSheet)
-        
-        // === WORLD CONFIGURATION ===
-        addAccessibleAction(to: alert, title: "🌍 World Configuration", accessibilityLabel: "World Configuration") { [weak self] _ in
-            self?.showWorldConfigurationMenu(world: world)
+    private func presentFullScreenSettings() {
+        let hub = SettingsHubViewController(world: currentWorld)
+        hub.onDismiss = { [weak self] in
+            self?.refreshCurrentPersistentMenu()
         }
-        
-        // === AUTOMATION ===
-        let automationCount = getAutomationItemCount(world: world)
-        let automationTitle = automationCount > 0 ? "🤖 Automation (\(automationCount) items)" : "🤖 Automation"
-        let automationAccessibilityLabel = automationCount > 0 ? "Automation, \(automationCount) items configured" : "Automation"
-        addAccessibleAction(to: alert, title: automationTitle, accessibilityLabel: automationAccessibilityLabel) { [weak self] _ in
-            self?.showAutomationMenu(world: world)
-        }
-        
-        // === APPEARANCE ===
-        addAccessibleAction(to: alert, title: "🎨 Appearance & Themes", accessibilityLabel: "Appearance and Themes") { [weak self] _ in
-            self?.showAppearanceMenu()
-        }
-        
-        // === INPUT & CONTROLS ===
-        addAccessibleAction(to: alert, title: "⌨️ Input & Controls", accessibilityLabel: "Input and Controls") { [weak self] _ in
-            self?.showInputControlsMenu()
-        }
-        
-        // === LOGGING & DATA ===
-        let loggingStatus = sessionLogger.isLogging ? " (Active)" : " (Inactive)"
-        let loggingTitle = "📁 Logging & Data\(loggingStatus)"
-        let loggingAccessibilityLabel = sessionLogger.isLogging ? "Logging and Data, currently active" : "Logging and Data, currently inactive"
-        addAccessibleAction(to: alert, title: loggingTitle, accessibilityLabel: loggingAccessibilityLabel) { [weak self] _ in
-            self?.showLoggingDataMenu()
-        }
-        
-        // === HELP & ABOUT ===
-        addAccessibleAction(to: alert, title: "❓ Help & About", accessibilityLabel: "Help and About") { [weak self] _ in
-            self?.showHelpAboutMenu()
-        }
-        
-        // === QUICK ACTIONS ===
-        addAccessibleAction(to: alert, title: "❌ Close World", style: .destructive, accessibilityLabel: "Close World") { [weak self] _ in
-            self?.requestCloseWorld()
-        }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
-        setupAlertForPresentation(alert)
-        present(alert, animated: true)
+        let nav = UINavigationController(rootViewController: hub)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
     
-    private func showAppOnlySettingsMenu() {
-        let alert = UIAlertController(title: "App Settings", message: "Configure global application settings", preferredStyle: .actionSheet)
-        
-        // === APPEARANCE ===
-        alert.addAction(UIAlertAction(title: "🎨 Appearance & Themes", style: .default) { [weak self] _ in
-            self?.showAppearanceMenu()
-        })
-        
-        // === INPUT & CONTROLS ===
-        alert.addAction(UIAlertAction(title: "⌨️ Input & Controls", style: .default) { [weak self] _ in
-            self?.showInputControlsMenu()
-        })
-        
-        // === LOGGING & DATA ===
-        alert.addAction(UIAlertAction(title: "📁 Logging & Data", style: .default) { [weak self] _ in
-            self?.showLoggingDataMenu()
-        })
-        
-        // === HELP & ABOUT ===
-        alert.addAction(UIAlertAction(title: "❓ Help & About", style: .default) { [weak self] _ in
-            self?.showHelpAboutMenu()
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
-        // For iPad
-        if let popover = alert.popoverPresentationController {
-            if let settingsButton = navigationToolbar.items?.last {
-                popover.barButtonItem = settingsButton
-            }
-        }
-        
-        present(alert, animated: true)
-    }
+    // Legacy entry points below will remain for now but are unused; full-screen hub replaces them.
     
     // MARK: - New Categorized Settings Menus
     
