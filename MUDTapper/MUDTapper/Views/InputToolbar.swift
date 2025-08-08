@@ -74,6 +74,9 @@ class InputToolbar: UIView {
         textField.smartDashesType = .no
         textField.smartInsertDeleteType = .no
         
+        // Keyboard appearance follows theme
+        textField.keyboardAppearance = themeManager.isDarkTheme ? .dark : .light
+        
         // Accessibility
         textField.accessibilityLabel = "Command Input"
         textField.accessibilityHint = "Enter MUD commands here. Swipe up or down to navigate command history."
@@ -276,6 +279,7 @@ class InputToolbar: UIView {
         
         textField.font = themeManager.terminalFont
         textField.textColor = themeManager.terminalTextColor
+        textField.keyboardAppearance = themeManager.isDarkTheme ? .dark : .light
         
         if let placeholder = textField.placeholder {
             textField.attributedPlaceholder = NSAttributedString(
@@ -420,6 +424,8 @@ class InputToolbar: UIView {
     @objc private func themeChanged() {
         DispatchQueue.main.async {
             self.applyTheme()
+            // Ensure the keyboard updates appearance if currently visible
+            self.textField.reloadInputViews()
         }
     }
     
