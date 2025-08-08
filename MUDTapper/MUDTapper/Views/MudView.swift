@@ -16,6 +16,13 @@ class MudView: UIView, UIGestureRecognizerDelegate, UITextViewDelegate {
     
     private var textView: UITextView!
     private var attributedText: NSMutableAttributedString = NSMutableAttributedString()
+    
+    // Smooth append/scroll management
+    private var pendingFragments: [NSAttributedString] = []
+    private var appendTimer: Timer?
+    private var autoScrollEnabled: Bool = true
+    private var unreadCount: Int = 0
+    private var jumpToLatestButton: UIButton?
     private var longPressGesture: UILongPressGestureRecognizer!
     private var selectedLineText: String?
     private let themeManager: ThemeManager
@@ -89,6 +96,9 @@ class MudView: UIView, UIGestureRecognizerDelegate, UITextViewDelegate {
         
         // Setup radial directional pads
         setupRadialDirectionalPads()
+
+        // Jump to latest control (appears when user scrolls up)
+        setupJumpToLatestButton()
         
         // Configure accessibility for the container
         isAccessibilityElement = false
@@ -110,6 +120,40 @@ class MudView: UIView, UIGestureRecognizerDelegate, UITextViewDelegate {
         
         // Position the radial buttons responsively
         updateRadialButtonConstraints()
+    }
+
+    private func setupJumpToLatestButton() {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Jump to Latest", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.backgroundColor = themeManager.linkColor.withAlphaComponent(0.15)
+        button.tintColor = themeManager.linkColor
+        button.layer.cornerRadius = 14
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
+        button.alpha = 0.0
+        button.addTarget(self, action: #selector(jumpToLatestTapped), for: .touchUpInside)
+        addSubview(button)
+        
+        NSLayoutConstraint.activate([
+            button.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -12),
+            button.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -80)
+        ])
+        
+        self.jumpToLatestButton = button
+    }
+
+    @objc private func jumpToLatestTapped() {
+        scrollToBottom()
+    }
+
+    private func updateJumpToLatestVisibility() {
+        let shouldShow = !autoScrollEnabled && unreadCount > 0
+        let targetAlpha: CGFloat = shouldShow ? 1.0 : 0.0
+        guard jumpToLatestButton?.alpha != targetAlpha else { return }
+        UIView.animate(withDuration: 0.2) {
+            self.jumpToLatestButton?.alpha = targetAlpha
+        }
     }
     
     private func updateRadialButtonConstraints() {
@@ -356,36 +400,12 @@ class MudView: UIView, UIGestureRecognizerDelegate, UITextViewDelegate {
     }
     
     func appendAttributedText(_ text: NSAttributedString) {
-        // Batch text updates to improve performance
-        let batchUpdate = {
-            self.attributedText.append(text)
-            
-            // Limit text buffer size to prevent memory issues and improve performance
-            let maxTextLength = 50000 // Keep last 50k characters
-            if self.attributedText.length > maxTextLength {
-                let excessLength = self.attributedText.length - maxTextLength
-                self.attributedText.deleteCharacters(in: NSRange(location: 0, length: excessLength))
-            }
-            
-            self.textView.attributedText = self.attributedText
+        // Enqueue fragments and flush on a short cadence to avoid choppy UI
+        let enqueue: () -> Void = {
+            self.pendingFragments.append(text)
+            self.scheduleAppendFlush()
         }
-        
-        // Use main queue but without additional async delay for better responsiveness
-        if Thread.isMainThread {
-            batchUpdate()
-            // Defer scrolling to next run loop to allow layout to complete
-            DispatchQueue.main.async {
-                self.efficientScrollToBottom()
-            }
-        } else {
-            DispatchQueue.main.async {
-                batchUpdate()
-                // Defer scrolling to next run loop to allow layout to complete
-                DispatchQueue.main.async {
-                    self.efficientScrollToBottom()
-                }
-            }
-        }
+        if Thread.isMainThread { enqueue() } else { DispatchQueue.main.async { enqueue() } }
     }
     
     // MARK: - ANSI Color Testing
@@ -451,14 +471,17 @@ tbaMUD 256-Color Test:
     }
     
     func scrollToBottom() {
-        efficientScrollToBottom()
+        autoScrollEnabled = true
+        unreadCount = 0
+        updateJumpToLatestVisibility()
+        efficientScrollToBottom(force: true)
     }
     
-    private func efficientScrollToBottom() {
+    private func efficientScrollToBottom(force: Bool = false) {
         // Ensure we're on the main queue
         guard Thread.isMainThread else {
             DispatchQueue.main.async { [weak self] in
-                self?.efficientScrollToBottom()
+                self?.efficientScrollToBottom(force: force)
             }
             return
         }
@@ -466,12 +489,58 @@ tbaMUD 256-Color Test:
         // Quick performance check - only scroll if we have content
         guard attributedText.length > 0, textView.contentSize.height > 0 else { return }
         
+        // Only auto-scroll if enabled or forced
+        guard force || autoScrollEnabled || isNearBottom() else { return }
+        
         // Use the most efficient scrolling method
         let textLength = attributedText.length
         if textLength > 0 {
             let endRange = NSRange(location: textLength - 1, length: 1)
             textView.scrollRangeToVisible(endRange)
         }
+    }
+
+    private func isNearBottom(threshold: CGFloat = 60) -> Bool {
+        let contentHeight = textView.contentSize.height
+        let visibleHeight = textView.bounds.height - textView.contentInset.top - textView.contentInset.bottom
+        let offsetY = textView.contentOffset.y
+        return (contentHeight - (offsetY + visibleHeight)) < threshold
+    }
+
+    // Timer-based batching to smooth UI updates when many small fragments arrive
+    private func scheduleAppendFlush() {
+        appendTimer?.invalidate()
+        appendTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: false) { [weak self] _ in
+            self?.flushPendingFragments()
+        }
+    }
+
+    private func flushPendingFragments() {
+        guard !pendingFragments.isEmpty else { return }
+        let fragments = pendingFragments
+        pendingFragments.removeAll()
+        
+        // Append all at once for smoother updates
+        let batch = NSMutableAttributedString()
+        fragments.forEach { batch.append($0) }
+        
+        // Track whether user is reading older text
+        let wasNearBottom = isNearBottom()
+        autoScrollEnabled = wasNearBottom
+        if !wasNearBottom { unreadCount += 1 }
+        updateJumpToLatestVisibility()
+        
+        // Apply with buffer limit
+        attributedText.append(batch)
+        let maxTextLength = 50000
+        if attributedText.length > maxTextLength {
+            let excessLength = attributedText.length - maxTextLength
+            attributedText.deleteCharacters(in: NSRange(location: 0, length: excessLength))
+        }
+        textView.attributedText = attributedText
+        
+        // Scroll if appropriate
+        efficientScrollToBottom()
     }
     
     func clearText() {
@@ -500,6 +569,12 @@ tbaMUD 256-Color Test:
         // Update radial button themes
         leftRadialButton?.applyTheme()
         rightRadialButton?.applyTheme()
+
+        // Update jump button theme
+        if let button = jumpToLatestButton {
+            button.backgroundColor = themeManager.linkColor.withAlphaComponent(0.15)
+            button.tintColor = themeManager.linkColor
+        }
     }
     
     // Public method to reset all radial controls if they get stuck
@@ -516,8 +591,16 @@ tbaMUD 256-Color Test:
     // MARK: - UITextViewDelegate
     
     func textViewDidChange(_ textView: UITextView) {
-        // Ensure we scroll to bottom when text changes
-        scrollToBottom()
+        // Only follow if user hasn't scrolled up
+        efficientScrollToBottom()
+    }
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        // Toggle auto-scroll when user scrolls away from bottom
+        if scrollView.isDragging || scrollView.isDecelerating {
+            autoScrollEnabled = isNearBottom()
+            updateJumpToLatestVisibility()
+        }
     }
 }
 
