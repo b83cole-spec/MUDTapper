@@ -136,6 +136,9 @@ class SettingsViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.separatorStyle = .singleLine
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.separatorColor = .separator
         
         // Register cell types
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "ActionCell")
@@ -155,8 +158,10 @@ class SettingsViewController: UIViewController {
     }
     
     private func applyTheme() {
-        view.backgroundColor = ThemeManager.shared.terminalBackgroundColor
-        tableView.backgroundColor = ThemeManager.shared.terminalBackgroundColor
+        // Use grouped system backgrounds for higher-contrast settings surfaces
+        view.backgroundColor = .systemGroupedBackground
+        tableView.backgroundColor = .systemGroupedBackground
+        tableView.separatorColor = .separator
     }
     
     // MARK: - Configuration
@@ -235,6 +240,7 @@ extension SettingsViewController: UITableViewDataSource {
         cell.textLabel?.text = item.title
         cell.accessibilityLabel = item.accessibilityLabel ?? item.title
         cell.accessibilityHint = item.accessibilityHint
+        cell.backgroundColor = .secondarySystemGroupedBackground
         
         switch item.style {
         case .destructive:
@@ -251,6 +257,7 @@ extension SettingsViewController: UITableViewDataSource {
         cell.accessibilityLabel = item.accessibilityLabel ?? item.title
         cell.accessibilityHint = item.accessibilityHint
         cell.selectionStyle = .none
+        cell.backgroundColor = .secondarySystemGroupedBackground
         
         let toggle = UISwitch()
         toggle.isOn = item.isEnabled
@@ -265,6 +272,7 @@ extension SettingsViewController: UITableViewDataSource {
         cell.detailTextLabel?.text = item.detail
         cell.accessibilityLabel = item.accessibilityLabel ?? item.title
         cell.accessibilityHint = item.accessibilityHint ?? "Tap to open \(item.title)"
+        cell.backgroundColor = .secondarySystemGroupedBackground
         
         cell.accessoryType = .disclosureIndicator
         cell.selectionStyle = .default

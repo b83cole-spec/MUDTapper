@@ -204,20 +204,31 @@ class ThemeManager {
         // Only apply global appearance settings if this is the global ThemeManager instance
         if _isGlobal {
             // Apply global appearance settings
-            let appearance = UINavigationBar.appearance()
-            appearance.barTintColor = currentTheme.backgroundColor
-            appearance.tintColor = currentTheme.linkColor
-            appearance.titleTextAttributes = [
+            let nav = UINavigationBar.appearance()
+            nav.tintColor = currentTheme.linkColor
+            let navAppearance = UINavigationBarAppearance()
+            navAppearance.configureWithDefaultBackground()
+            navAppearance.backgroundColor = UIColor.secondarySystemGroupedBackground
+            navAppearance.titleTextAttributes = [
                 .foregroundColor: currentTheme.fontColor,
                 .font: UIFont(name: currentTheme.fontName, size: 18.0) ?? UIFont.systemFont(ofSize: 18.0)
             ]
-            
-            // Apply to other UI elements
-            UIToolbar.appearance().barTintColor = currentTheme.backgroundColor
-            UIToolbar.appearance().tintColor = currentTheme.linkColor
-            
-            UITabBar.appearance().barTintColor = currentTheme.backgroundColor
-            UITabBar.appearance().tintColor = currentTheme.linkColor
+            nav.standardAppearance = navAppearance
+            nav.scrollEdgeAppearance = navAppearance
+
+            let toolbar = UIToolbar.appearance()
+            let toolbarAppearance = UIToolbarAppearance()
+            toolbarAppearance.configureWithDefaultBackground()
+            toolbar.standardAppearance = toolbarAppearance
+            toolbar.scrollEdgeAppearance = toolbarAppearance
+            toolbar.tintColor = currentTheme.linkColor
+
+            let tab = UITabBar.appearance()
+            let tabAppearance = UITabBarAppearance()
+            tabAppearance.configureWithDefaultBackground()
+            tab.standardAppearance = tabAppearance
+            tab.scrollEdgeAppearance = tabAppearance
+            tab.tintColor = currentTheme.linkColor
             
             // Set status bar style based on theme
             if #available(iOS 13.0, *) {
