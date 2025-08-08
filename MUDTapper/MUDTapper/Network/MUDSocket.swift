@@ -41,6 +41,7 @@ class MUDSocket: NSObject {
     private var consecutiveKeepAliveFailures = 0
     private var backgroundTaskChainTimer: Timer?
     private var isInDeepBackground = false
+    private var pathMonitor: NWPathMonitor?
     
     // Network reachability monitoring
     private var reachability: SCNetworkReachability?
@@ -83,6 +84,7 @@ class MUDSocket: NSObject {
         disconnect()
         NotificationCenter.default.removeObserver(self)
         stopNetworkMonitoring()
+        stopPathMonitoring()
         endConnectionMaintenanceTask()
         endBackgroundTask()
         disableVoIPBackgroundProtection()
@@ -201,6 +203,7 @@ class MUDSocket: NSObject {
         
         // Start network monitoring
         setupNetworkMonitoring()
+        startPathMonitoring()
         
         print("MUDSocket: Connection started, waiting for state updates...")
     }
@@ -659,6 +662,30 @@ class MUDSocket: NSObject {
         isMonitoringNetwork = false
         lastNetworkStatus = nil
         print("MUDSocket: Network monitoring stopped")
+    }
+    
+    // MARK: - NWPath monitoring
+    private func startPathMonitoring() {
+        stopPathMonitoring()
+        let monitor = NWPathMonitor()
+        pathMonitor = monitor
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard let self = self else { return }
+            print("MUDSocket: NWPath update: status=\(path.status), expensive=\(path.isExpensive), constrained=\(path.isConstrained)")
+            if path.status == .satisfied {
+                if self.shouldReconnect && !self.isConnected {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.attemptReconnect()
+                    }
+                }
+            }
+        }
+        monitor.start(queue: DispatchQueue.global(qos: .utility))
+    }
+    
+    private func stopPathMonitoring() {
+        pathMonitor?.cancel()
+        pathMonitor = nil
     }
     
     private func handleNetworkChange(flags: SCNetworkReachabilityFlags) {
