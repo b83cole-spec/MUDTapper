@@ -837,6 +837,68 @@ extension AdvancedAutomationViewController: AutomationOrganizerDelegate {
 
 // MARK: - Supporting View Controllers (Placeholders)
 
+class MultilineTextEditorViewController: UIViewController {
+    private let hintText: String?
+    private let onSave: (String) -> Void
+    private let textView = UITextView()
+
+    init(title: String, initialText: String, hint: String?, onSave: @escaping (String) -> Void) {
+        self.hintText = hint
+        self.onSave = onSave
+        super.init(nibName: nil, bundle: nil)
+        self.title = title
+        self.textView.text = initialText
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = ThemeManager.shared.terminalBackgroundColor
+        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelTapped))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(saveTapped))
+
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        if let hintText = hintText, !hintText.isEmpty {
+            let hintLabel = UILabel()
+            hintLabel.text = hintText
+            hintLabel.textColor = ThemeManager.shared.terminalTextColor.withAlphaComponent(0.7)
+            hintLabel.numberOfLines = 0
+            hintLabel.font = UIFont.systemFont(ofSize: 13)
+            stack.addArrangedSubview(hintLabel)
+        }
+
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.font = UIFont.monospacedSystemFont(ofSize: 15, weight: .regular)
+        textView.layer.borderWidth = 1
+        textView.layer.borderColor = UIColor.systemGray4.cgColor
+        textView.layer.cornerRadius = 8
+        textView.backgroundColor = UIColor.systemBackground
+        textView.textColor = ThemeManager.shared.isDarkTheme ? .white : .black
+
+        stack.addArrangedSubview(textView)
+        view.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            textView.heightAnchor.constraint(greaterThanOrEqualToConstant: 260)
+        ])
+    }
+
+    @objc private func cancelTapped() { navigationController?.popViewController(animated: true) }
+
+    @objc private func saveTapped() {
+        onSave(textView.text ?? "")
+        navigationController?.popViewController(animated: true)
+    }
+}
+
 class AutomationEditorViewController: UIViewController {
     
     weak var delegate: AutomationEditorDelegate?
@@ -941,7 +1003,12 @@ class AutomationEditorViewController: UIViewController {
             let trigger = automationItem?.managedObject as? Trigger ?? Trigger(context: context)
             trigger.label = formData["name"] as? String ?? ""
             trigger.trigger = formData["pattern"] as? String ?? ""
-            trigger.commands = formData["action"] as? String ?? ""
+            let actionRaw = formData["action"] as? String ?? ""
+            let triggerCommands = actionRaw.components(separatedBy: .newlines)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: ";")
+            trigger.commands = triggerCommands
             trigger.isEnabled = formData["isEnabled"] as? Bool ?? true
             trigger.world = world
             trigger.lastModified = Date()
@@ -949,7 +1016,12 @@ class AutomationEditorViewController: UIViewController {
         case .aliases:
             let alias = automationItem?.managedObject as? Alias ?? Alias(context: context)
             alias.name = formData["pattern"] as? String ?? ""
-            alias.commands = formData["action"] as? String ?? ""
+            let actionRaw = formData["action"] as? String ?? ""
+            let aliasCommands = actionRaw.components(separatedBy: .newlines)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: ";")
+            alias.commands = aliasCommands
             alias.isEnabled = formData["isEnabled"] as? Bool ?? true
             alias.world = world
             alias.lastModified = Date()
@@ -963,7 +1035,12 @@ class AutomationEditorViewController: UIViewController {
             
         case .tickers:
             let ticker = automationItem?.managedObject as? Ticker ?? Ticker(context: context)
-            ticker.commands = formData["action"] as? String ?? ""
+            let actionRaw = formData["action"] as? String ?? ""
+            let tickerCommands = actionRaw.components(separatedBy: .newlines)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: ";")
+            ticker.commands = tickerCommands
             ticker.interval = formData["interval"] as? Double ?? 60.0
             ticker.isEnabled = formData["isEnabled"] as? Bool ?? true
             ticker.world = world
@@ -1119,13 +1196,13 @@ extension AutomationEditorViewController: UITableViewDataSource, UITableViewDele
                 switch indexPath.row {
                 case 0: editTextField(title: "Name", key: "name", placeholder: "Trigger name (optional)")
                 case 1: editTextField(title: "Pattern", key: "pattern", placeholder: "Text pattern to match")
-                case 2: editTextField(title: "Commands", key: "action", placeholder: "Commands to execute")
+                case 2: editMultilineField(title: "Commands", key: "action", hint: "Enter one command per line. Lines will be saved as semicolon-separated commands.")
                 default: break
                 }
             case .aliases:
                 switch indexPath.row {
                 case 0: editTextField(title: "Name", key: "pattern", placeholder: "Alias name (e.g., 'k')")
-                case 1: editTextField(title: "Commands", key: "action", placeholder: "Commands to execute")
+                case 1: editMultilineField(title: "Commands", key: "action", hint: "Enter one command per line. Lines will be saved as semicolon-separated commands.")
                 default: break
                 }
             case .gags:
@@ -1134,7 +1211,7 @@ extension AutomationEditorViewController: UITableViewDataSource, UITableViewDele
                 }
             case .tickers:
                 switch indexPath.row {
-                case 0: editTextField(title: "Commands", key: "action", placeholder: "Commands to execute")
+                case 0: editMultilineField(title: "Commands", key: "action", hint: "Enter one command per line. Lines will be saved as semicolon-separated commands.")
                 case 1: editNumberField(title: "Interval", key: "interval", placeholder: "Seconds")
                 case 3: editTextField(title: "Name", key: "name", placeholder: "Ticker name (optional)")
                 default: break
@@ -1166,6 +1243,20 @@ extension AutomationEditorViewController: UITableViewDataSource, UITableViewDele
         })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
+    }
+
+    private func editMultilineField(title: String, key: String, hint: String?) {
+        var initial = self.formData[key] as? String ?? ""
+        if key == "action" && initial.contains(";") {
+            let lines = initial.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            initial = lines.joined(separator: "\n")
+        }
+        let editor = MultilineTextEditorViewController(title: title, initialText: initial, hint: hint) { [weak self] newText in
+            guard let self = self else { return }
+            self.formData[key] = newText
+            self.tableView.reloadData()
+        }
+        navigationController?.pushViewController(editor, animated: true)
     }
     
     private func editNumberField(title: String, key: String, placeholder: String) {
