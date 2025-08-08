@@ -875,36 +875,8 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     }
     
     private func showAppearanceMenu() {
-        let alert = UIAlertController(title: "🎨 Appearance & Themes", message: "Customize colors, fonts, and visual elements", preferredStyle: .actionSheet)
-        
-        alert.addAction(UIAlertAction(title: "🌈 Themes", style: .default) { [weak self] _ in
-            self?.showThemeSettings()
-        })
-        
-        alert.addAction(UIAlertAction(title: "📝 Font Settings", style: .default) { [weak self] _ in
-            self?.showFontSettings()
-        })
-        
-
-        
-        alert.addAction(UIAlertAction(title: "📱 Display Settings", style: .default) { [weak self] _ in
-            self?.showDisplaySettings()
-        })
-        
-        alert.addAction(UIAlertAction(title: "❓ Help: Themes", style: .default) { [weak self] _ in
-            self?.showThemeHelp()
-        })
-        
-        alert.addAction(UIAlertAction(title: "← Back", style: .cancel) { [weak self] _ in
-            if let world = self?.currentWorld {
-                self?.showMainSettingsMenu(world: world)
-            } else {
-                self?.showAppOnlySettingsMenu()
-            }
-        })
-        
-        setupAlertForPresentation(alert)
-        present(alert, animated: true)
+        // Route directly to the modern Theme & Appearance settings
+        showThemeSettings()
     }
     
     private func showInputControlsMenu() {
@@ -916,10 +888,6 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
         
         alert.addAction(UIAlertAction(title: "🎮 Radial Controls", style: .default) { [weak self] _ in
             self?.showRadialControlSettings()
-        })
-        
-        alert.addAction(UIAlertAction(title: "🌐 Network Settings", style: .default) { [weak self] _ in
-            self?.showNetworkSettings()
         })
         
         alert.addAction(UIAlertAction(title: "♿ Accessibility", style: .default) { [weak self] _ in
@@ -1723,32 +1691,8 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     }
     
     private func showFontSettings() {
-        let alert = UIAlertController(title: "Font Settings", message: "Customize terminal font", preferredStyle: .alert)
-        
-        alert.addTextField { [self] textField in
-            textField.placeholder = "Font Name"
-            textField.text = self.themeManager.currentTheme.fontName
-        }
-        
-        alert.addTextField { [self] textField in
-            textField.placeholder = "Font Size"
-            textField.keyboardType = .numberPad
-            textField.text = "\(Int(self.themeManager.currentTheme.fontSize))"
-        }
-        
-        alert.addAction(UIAlertAction(title: "Apply", style: .default) { [self] _ in
-            guard let fontName = alert.textFields?[0].text, !fontName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  let sizeText = alert.textFields?[1].text, let size = Int(sizeText), size >= 8 && size <= 24 else {
-                self.showAlert(title: "Invalid Input", message: "Please enter a valid font name and size between 8 and 24 points.")
-                return
-            }
-            
-            self.themeManager.updateFont(name: fontName.trimmingCharacters(in: .whitespacesAndNewlines), size: CGFloat(size))
-            self.showAlert(title: "Font Updated", message: "Font changed to \(fontName) at \(size) points.")
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
+        // Deprecated in favor of ThemeSettingsViewController Typography section
+        showModernThemeSettings()
     }
     
     private func editTicker(_ ticker: Ticker) {
@@ -1932,18 +1876,8 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     }
     
     private func showDisplaySettings() {
-        let alert = UIAlertController(title: "Display Settings", message: "Configure display options", preferredStyle: .actionSheet)
-        
-        alert.addAction(UIAlertAction(title: "Change Theme", style: .default) { _ in
-            self.showThemeSelector()
-        })
-        
-        alert.addAction(UIAlertAction(title: "Font Size", style: .default) { _ in
-            self.showFontSizeSelector()
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
+        // Deprecated in favor of ThemeSettingsViewController Display Options section
+        showModernThemeSettings()
     }
     
     private func showRadialControlSettings() {
@@ -2011,22 +1945,8 @@ class ClientViewController: UIViewController, MudViewDelegate, WorldEditControll
     }
     
     private func showNetworkSettings() {
-        let alert = UIAlertController(title: "Network Settings", message: "Configure connection options", preferredStyle: .actionSheet)
-        
-        alert.addAction(UIAlertAction(title: "Connect on Startup", style: .default) { _ in
-            let enabled = UserDefaults.standard.bool(forKey: UserDefaultsKeys.connectOnStartup)
-            UserDefaults.standard.set(!enabled, forKey: UserDefaultsKeys.connectOnStartup)
-            self.showAlert(title: "Connect on Startup", message: "Connect on startup is now \(!enabled ? "enabled" : "disabled")")
-        })
-        
-        alert.addAction(UIAlertAction(title: "Background Audio", style: .default) { _ in
-            let enabled = UserDefaults.standard.bool(forKey: UserDefaultsKeys.backgroundAudioEnabled)
-            UserDefaults.standard.set(!enabled, forKey: UserDefaultsKeys.backgroundAudioEnabled)
-            self.showAlert(title: "Background Audio", message: "Background audio is now \(!enabled ? "enabled" : "disabled"). This helps maintain connections when the app is in the background.")
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
+        // Deprecated in favor of InputSettingsViewController Network section
+        showModernInputSettings()
     }
     
     private func showAccessibilitySettings() {

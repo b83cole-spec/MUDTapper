@@ -138,7 +138,7 @@ class InputSettingsViewController: SettingsViewController {
     }
     
     private func createNetworkSection() -> SettingsSection {
-        let items: [SettingsItem] = [
+        var items: [SettingsItem] = [
             ToggleSettingsItem(
                 title: "Connect on Startup",
                 accessibilityLabel: "Connect on Startup",
@@ -160,6 +160,17 @@ class InputSettingsViewController: SettingsViewController {
                 self?.showTimeoutSettings()
             }
         ]
+
+        // Move Background Audio here from legacy action sheet
+        items.append(
+            ToggleSettingsItem(
+                title: "Background Audio",
+                accessibilityLabel: "Background Audio",
+                accessibilityHint: "Keep minimal audio active to help maintain connections in background",
+                userDefaultsKey: UserDefaultsKeys.backgroundAudioEnabled,
+                defaultValue: true
+            )
+        )
         
         return SettingsSection(
             title: "Network",
